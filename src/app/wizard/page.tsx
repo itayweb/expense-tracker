@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import WizardContainer from "@/components/wizard/WizardContainer";
 import { BudgetWithCategories } from "@/lib/types";
 
-export default function WizardPage() {
+function WizardContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") === "edit" ? "edit" : "create";
   const [existingBudget, setExistingBudget] = useState<BudgetWithCategories | null>(null);
@@ -34,4 +34,18 @@ export default function WizardPage() {
   }
 
   return <WizardContainer mode={mode} existingBudget={existingBudget} />;
+}
+
+export default function WizardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+        </div>
+      }
+    >
+      <WizardContent />
+    </Suspense>
+  );
 }
