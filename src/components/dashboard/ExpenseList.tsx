@@ -37,6 +37,11 @@ export default function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
                   {expense.recurringInterval === "weekly" ? "weekly" : "monthly"}
                 </span>
               )}
+              {expense.tripName && (
+                <span className="text-xs px-1.5 py-0.5 rounded-full bg-teal-100 text-teal-700 shrink-0">
+                  {expense.tripName}
+                </span>
+              )}
             </div>
             <p className="text-xs text-gray-400">
               {new Date(expense.date).toLocaleDateString()}

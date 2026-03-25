@@ -5,12 +5,15 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import BudgetOverview from "@/components/dashboard/BudgetOverview";
 import CategoryGrid from "@/components/dashboard/CategoryGrid";
+import TripSection from "@/components/dashboard/TripSection";
+import AddExpenseModal from "@/components/dashboard/AddExpenseModal";
 import { BudgetWithCategories } from "@/lib/types";
 
 export default function DashboardPage() {
   const router = useRouter();
   const [budget, setBudget] = useState<BudgetWithCategories | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
 
   const fetchBudget = useCallback(async () => {
     try {
@@ -80,9 +83,27 @@ export default function DashboardPage() {
           totalSpent={totalSpent}
           totalAllocated={totalAllocated}
         />
+
+        <div className="flex justify-end mb-4">
+          <button
+            onClick={() => setShowAddExpenseModal(true)}
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+          >
+            + Add Expense
+          </button>
+        </div>
+
         <CategoryGrid
           categories={budget.categories}
           onRefresh={fetchBudget}
+        />
+        <TripSection onRefresh={fetchBudget} />
+
+        <AddExpenseModal
+          isOpen={showAddExpenseModal}
+          onClose={() => setShowAddExpenseModal(false)}
+          categories={budget.categories}
+          onSaved={fetchBudget}
         />
       </main>
     </div>

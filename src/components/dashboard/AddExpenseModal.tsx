@@ -1,35 +1,76 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
+import { TripItem, CategoryWithExpenses } from "@/lib/types";
 
 interface AddExpenseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  categoryId: number;
-  categoryName: string;
+  categoryId?: number;
+  categoryName?: string;
+  categories?: CategoryWithExpenses[];
   onSaved: () => void;
+  defaultTripId?: number;
 }
 
 export default function AddExpenseModal({
   isOpen,
   onClose,
-  categoryId,
+  categoryId: initialCategoryId,
   categoryName,
+  categories,
   onSaved,
+  defaultTripId,
 }: AddExpenseModalProps) {
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>(
+    initialCategoryId ? String(initialCategoryId) : ""
+  );
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [recurring, setRecurring] = useState(false);
   const [recurringInterval, setRecurringInterval] = useState<"weekly" | "monthly">("monthly");
+  const [tripId, setTripId] = useState<string>(defaultTripId ? String(defaultTripId) : "");
+  const [trips, setTrips] = useState<TripItem[]>([]);
   const [saving, setSaving] = useState(false);
+
+  // Determine effective categoryId
+  const effectiveCategoryId = initialCategoryId
+    ? String(initialCategoryId)
+    : selectedCategoryId;
+
+  useEffect(() => {
+    if (isOpen) {
+      fetch("/api/trips?status=active")
+        .then((res) => res.json())
+        .then((data) => setTrips(data))
+        .catch(() => setTrips([]));
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (defaultTripId) {
+      setTripId(String(defaultTripId));
+    }
+  }, [defaultTripId]);
+
+  const handleClose = () => {
+    setAmount("");
+    setDescription("");
+    setDate(new Date().toISOString().split("T")[0]);
+    setRecurring(false);
+    setRecurringInterval("monthly");
+    setTripId(defaultTripId ? String(defaultTripId) : "");
+    if (!initialCategoryId) setSelectedCategoryId("");
+    onClose();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!amount || !description) return;
+    if (!amount || !description || !effectiveCategoryId) return;
 
     setSaving(true);
     try {
@@ -40,17 +81,13 @@ export default function AddExpenseModal({
           amount: parseFloat(amount),
           description,
           date: new Date(date).toISOString(),
-          categoryId,
+          categoryId: parseInt(effectiveCategoryId),
           recurring,
           recurringInterval: recurring ? recurringInterval : null,
+          tripId: tripId ? parseInt(tripId) : null,
         }),
       });
-      setAmount("");
-      setDescription("");
-      setDate(new Date().toISOString().split("T")[0]);
-      setRecurring(false);
-      setRecurringInterval("monthly");
-      onClose();
+      handleClose();
       onSaved();
     } catch (error) {
       console.error("Failed to save expense:", error);
@@ -59,9 +96,36 @@ export default function AddExpenseModal({
     }
   };
 
+  const modalTitle = categoryName
+    ? `Add Expense — ${categoryName}`
+    : "Add Expense";
+
+  const canSubmit = !saving && !!amount && !!description && !!effectiveCategoryId;
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={`Add Expense — ${categoryName}`}>
+    <Modal isOpen={isOpen} onClose={handleClose} title={modalTitle}>
       <form onSubmit={handleSubmit} className="space-y-4">
+        {!initialCategoryId && categories && categories.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <select
+              value={selectedCategoryId}
+              onChange={(e) => setSelectedCategoryId(e.target.value)}
+              required
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="">Select a category</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name} ({cat.type})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <Input
           id="expense-amount"
           label="Amount (₪)"
@@ -87,6 +151,26 @@ export default function AddExpenseModal({
           onChange={(e) => setDate(e.target.value)}
         />
 
+        {trips.length > 0 && (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Trip (optional)
+            </label>
+            <select
+              value={tripId}
+              onChange={(e) => setTripId(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
+            >
+              <option value="">No trip</option>
+              {trips.map((trip) => (
+                <option key={trip.id} value={trip.id}>
+                  {trip.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div className="space-y-2">
           <label className="flex items-center gap-2 cursor-pointer">
             <input
@@ -110,10 +194,10 @@ export default function AddExpenseModal({
         </div>
 
         <div className="flex gap-3 pt-2">
-          <Button variant="secondary" type="button" onClick={onClose}>
+          <Button variant="secondary" type="button" onClick={handleClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={saving || !amount || !description}>
+          <Button type="submit" disabled={!canSubmit}>
             {saving ? "Saving..." : "Add Expense"}
           </Button>
         </div>

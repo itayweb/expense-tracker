@@ -18,11 +18,8 @@ export default function WizardContainer({
 }: WizardContainerProps) {
   const isEdit = mode === "edit" && existingBudget;
 
-  // In edit mode: skip categories step (0: Income, 1: Allocations, 2: Review)
-  // In create mode: full flow (0: Income, 1: Categories, 2: AI Budget, 3: Review)
-  const STEPS = isEdit
-    ? ["Income", "Allocations", "Review"]
-    : ["Income", "Categories", "AI Budget", "Review"];
+  // Both modes: full 4-step flow
+  const STEPS = ["Income", "Categories", "AI Budget", "Review"];
 
   const [step, setStep] = useState(0);
   const [monthlyIncome, setMonthlyIncome] = useState(
@@ -44,86 +41,77 @@ export default function WizardContainer({
       : []
   );
   const [budgetId] = useState(isEdit ? existingBudget.id : null);
+  const [deletedCategoryIds, setDeletedCategoryIds] = useState<number[]>([]);
 
-  // Map step index to actual component based on mode
-  const renderStep = () => {
+  const handleCategoriesNext = () => {
     if (isEdit) {
-      // Edit mode: Income (0) → Allocations (1) → Review (2)
-      switch (step) {
-        case 0:
-          return (
-            <StepIncome
-              income={monthlyIncome}
-              onChange={setMonthlyIncome}
-              onNext={() => setStep(1)}
-            />
-          );
-        case 1:
-          return (
-            <StepAISuggestions
-              monthlyIncome={monthlyIncome}
-              categories={categories}
-              budgetCategories={budgetCategories}
-              onChange={setBudgetCategories}
-              onNext={() => setStep(2)}
-              onBack={() => setStep(0)}
-              editMode
-            />
-          );
-        case 2:
-          return (
-            <StepReview
-              monthlyIncome={monthlyIncome}
-              categories={budgetCategories}
-              onBack={() => setStep(1)}
-              editMode
-              budgetId={budgetId!}
-            />
-          );
-      }
+      // Merge: keep existing budget data for categories that still exist, add new ones with 0 budget
+      const existingByKey = new Map(
+        budgetCategories.map((bc) => [`${bc.name}::${bc.type}`, bc])
+      );
+      const newCategories = categories.map((c) => {
+        const key = `${c.name}::${c.type}`;
+        const existing = existingByKey.get(key);
+        return existing || { ...c, budgetAmount: 0 };
+      });
+
+      // Track deleted categories that had an id
+      const remainingKeys = new Set(categories.map((c) => `${c.name}::${c.type}`));
+      const deleted = budgetCategories
+        .filter((bc) => bc.id && !remainingKeys.has(`${bc.name}::${bc.type}`))
+        .map((bc) => bc.id!);
+      setDeletedCategoryIds((prev) => [...new Set([...prev, ...deleted])]);
+
+      setBudgetCategories(newCategories);
     } else {
-      // Create mode: Income (0) → Categories (1) → AI Budget (2) → Review (3)
-      switch (step) {
-        case 0:
-          return (
-            <StepIncome
-              income={monthlyIncome}
-              onChange={setMonthlyIncome}
-              onNext={() => setStep(1)}
-            />
-          );
-        case 1:
-          return (
-            <StepCategories
-              categories={categories}
-              onChange={setCategories}
-              onNext={() => {
-                setBudgetCategories([]);
-                setStep(2);
-              }}
-              onBack={() => setStep(0)}
-            />
-          );
-        case 2:
-          return (
-            <StepAISuggestions
-              monthlyIncome={monthlyIncome}
-              categories={categories}
-              budgetCategories={budgetCategories}
-              onChange={setBudgetCategories}
-              onNext={() => setStep(3)}
-              onBack={() => setStep(1)}
-            />
-          );
-        case 3:
-          return (
-            <StepReview
-              monthlyIncome={monthlyIncome}
-              categories={budgetCategories}
-              onBack={() => setStep(2)}
-            />
-          );
-      }
+      setBudgetCategories([]);
+    }
+    setStep(2);
+  };
+
+  // Unified 4-step flow: Income (0) → Categories (1) → AI Budget (2) → Review (3)
+  const renderStep = () => {
+    switch (step) {
+      case 0:
+        return (
+          <StepIncome
+            income={monthlyIncome}
+            onChange={setMonthlyIncome}
+            onNext={() => setStep(1)}
+          />
+        );
+      case 1:
+        return (
+          <StepCategories
+            categories={categories}
+            onChange={setCategories}
+            onNext={handleCategoriesNext}
+            onBack={() => setStep(0)}
+          />
+        );
+      case 2:
+        return (
+          <StepAISuggestions
+            monthlyIncome={monthlyIncome}
+            categories={categories}
+            budgetCategories={budgetCategories}
+            onChange={setBudgetCategories}
+            onNext={() => setStep(3)}
+            onBack={() => setStep(1)}
+            editMode={!!isEdit}
+          />
+        );
+      case 3:
+        return (
+          <StepReview
+            monthlyIncome={monthlyIncome}
+            categories={budgetCategories}
+            onBack={() => setStep(2)}
+            editMode={!!isEdit}
+            budgetId={budgetId ?? undefined}
+            deletedCategoryIds={deletedCategoryIds}
+          />
+        );
     }
   };
 
@@ -136,7 +124,7 @@ export default function WizardContainer({
           </h1>
           <p className="text-gray-500 mt-1">
             {isEdit
-              ? "Adjust your income and category allocations"
+              ? "Adjust your income, categories, and allocations"
               : "Set up your monthly budget in a few simple steps"}
           </p>
         </div>

@@ -15,6 +15,7 @@ export async function GET() {
         categories: {
           include: {
             expenses: {
+              include: { trip: { select: { id: true, name: true } } },
               orderBy: { date: "desc" },
             },
           },
@@ -40,6 +41,7 @@ export async function GET() {
         categories: {
           include: {
             expenses: {
+              include: { trip: { select: { id: true, name: true } } },
               orderBy: { date: "desc" },
             },
           },
@@ -54,17 +56,28 @@ export async function GET() {
     const weeksInMonth = getWeekBoundaries(month, year).length;
 
     const categoriesWithTotals = updatedBudget.categories.map((cat) => {
-      const totalSpent = cat.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+      // Flatten trip data on expenses
+      const expenses = cat.expenses.map((exp) => {
+        const { trip, ...rest } = exp as typeof exp & { trip?: { id: number; name: string } | null };
+        return {
+          ...rest,
+          tripId: trip?.id ?? null,
+          tripName: trip?.name ?? null,
+        };
+      });
+
+      const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
 
       if (cat.type === "weekly") {
         const weeklyInfo = computeWeeklyBudget(
           cat.budgetAmount,
-          cat.expenses,
+          expenses,
           month,
           year
         );
         return {
           ...cat,
+          expenses,
           totalSpent,
           weeklyInfo,
         };
@@ -72,6 +85,7 @@ export async function GET() {
 
       return {
         ...cat,
+        expenses,
         totalSpent,
       };
     });
@@ -124,7 +138,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   const body = await request.json();
-  const { budgetId, monthlyIncome, categories } = body;
+  const { budgetId, monthlyIncome, categories, deletedCategoryIds } = body;
 
   await prisma.$transaction(async (tx) => {
     // Update income
@@ -133,12 +147,30 @@ export async function PUT(request: NextRequest) {
       data: { monthlyIncome },
     });
 
-    // Update each category's budget amount
-    for (const cat of categories as { id: number; budgetAmount: number }[]) {
-      await tx.category.update({
-        where: { id: cat.id },
-        data: { budgetAmount: cat.budgetAmount },
+    // Delete removed categories
+    if (deletedCategoryIds?.length) {
+      await tx.category.deleteMany({
+        where: { id: { in: deletedCategoryIds } },
       });
+    }
+
+    // Update existing or create new categories
+    for (const cat of categories as { id?: number; name: string; type: string; budgetAmount: number }[]) {
+      if (cat.id) {
+        await tx.category.update({
+          where: { id: cat.id },
+          data: { budgetAmount: cat.budgetAmount },
+        });
+      } else {
+        await tx.category.create({
+          data: {
+            name: cat.name,
+            type: cat.type,
+            budgetAmount: cat.budgetAmount,
+            budgetId,
+          },
+        });
+      }
     }
   });
 
