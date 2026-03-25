@@ -4,6 +4,7 @@
   "description": "Personal expense tracking app with AI-powered budget suggestions",
   "main": "index.js",
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "next build",
     "start": "next start"
