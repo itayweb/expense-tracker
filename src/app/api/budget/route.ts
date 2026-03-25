@@ -96,8 +96,10 @@ export async function GET() {
       weeksInMonth,
     });
   } catch (error) {
-    console.error("Budget GET error:", error);
-    return NextResponse.json({ error: "Failed to fetch budget" }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("Budget GET error:", message, stack);
+    return NextResponse.json({ error: "Failed to fetch budget", detail: message }, { status: 500 });
   }
 }
 
