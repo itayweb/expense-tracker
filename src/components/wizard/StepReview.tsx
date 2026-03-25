@@ -12,6 +12,7 @@ interface StepReviewProps {
   onBack: () => void;
   editMode?: boolean;
   budgetId?: number;
+  deletedCategoryIds?: number[];
 }
 
 export default function StepReview({
@@ -20,6 +21,7 @@ export default function StepReview({
   onBack,
   editMode = false,
   budgetId,
+  deletedCategoryIds = [],
 }: StepReviewProps) {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
@@ -42,9 +44,12 @@ export default function StepReview({
             budgetId,
             monthlyIncome,
             categories: categories.map((cat) => ({
-              id: (cat as WizardCategoryWithBudget & { id?: number }).id,
+              ...(cat.id ? { id: cat.id } : {}),
+              name: cat.name,
+              type: cat.type,
               budgetAmount: cat.budgetAmount,
             })),
+            deletedCategoryIds,
           }),
         });
       } else {

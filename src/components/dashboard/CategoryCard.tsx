@@ -3,11 +3,9 @@
 import { useState } from "react";
 import Card from "@/components/ui/Card";
 import ProgressBar from "@/components/ui/ProgressBar";
-import Button from "@/components/ui/Button";
 import { CategoryWithExpenses } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
-import ExpenseList from "./ExpenseList";
-import AddExpenseModal from "./AddExpenseModal";
+import CategoryExpensesModal from "./CategoryExpensesModal";
 
 interface CategoryCardProps {
   category: CategoryWithExpenses;
@@ -15,8 +13,7 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({ category, onRefresh }: CategoryCardProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [showExpensesModal, setShowExpensesModal] = useState(false);
 
   const isWeekly = category.type === "weekly" && category.weeklyInfo;
   const displaySpent = isWeekly
@@ -31,7 +28,7 @@ export default function CategoryCard({ category, onRefresh }: CategoryCardProps)
       <Card className="flex flex-col">
         <div
           className="cursor-pointer"
-          onClick={() => setExpanded(!expanded)}
+          onClick={() => setShowExpensesModal(true)}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -51,9 +48,6 @@ export default function CategoryCard({ category, onRefresh }: CategoryCardProps)
                 </span>
               )}
             </div>
-            <span className="text-sm text-gray-400">
-              {expanded ? "▲" : "▼"}
-            </span>
           </div>
 
           <div className="flex justify-between text-sm text-gray-500 mb-2">
@@ -81,36 +75,13 @@ export default function CategoryCard({ category, onRefresh }: CategoryCardProps)
             height="h-2.5"
           />
         </div>
-
-        <div className="mt-3">
-          <Button
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowAddModal(true);
-            }}
-            className="w-full"
-          >
-            + Add Expense
-          </Button>
-        </div>
-
-        {expanded && (
-          <div className="mt-4 border-t border-gray-100 pt-4">
-            <ExpenseList
-              expenses={category.expenses}
-              onRefresh={onRefresh}
-            />
-          </div>
-        )}
       </Card>
 
-      <AddExpenseModal
-        isOpen={showAddModal}
-        onClose={() => setShowAddModal(false)}
-        categoryId={category.id}
-        categoryName={category.name}
-        onSaved={onRefresh}
+      <CategoryExpensesModal
+        isOpen={showExpensesModal}
+        onClose={() => setShowExpensesModal(false)}
+        category={category}
+        onRefresh={onRefresh}
       />
     </>
   );

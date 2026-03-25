@@ -7,6 +7,7 @@ export interface WizardCategory {
 
 export interface WizardCategoryWithBudget extends WizardCategory {
   budgetAmount: number;
+  id?: number;
 }
 
 export interface WizardData {
@@ -27,6 +28,18 @@ export interface ExpenseItem {
   date: string;
   recurring: boolean;
   recurringInterval: string | null;
+  tripId?: number | null;
+  tripName?: string | null;
+}
+
+export interface TripItem {
+  id: number;
+  name: string;
+  startDate: string | null;
+  endDate: string | null;
+  status: "active" | "completed";
+  totalSpent: number;
+  expenses: ExpenseItem[];
 }
 
 export interface WeeklyInfoData {

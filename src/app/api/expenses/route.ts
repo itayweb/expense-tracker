@@ -6,6 +6,7 @@ export async function GET(request: NextRequest) {
 
   const expenses = await prisma.expense.findMany({
     where: categoryId ? { categoryId: parseInt(categoryId) } : undefined,
+    include: { trip: { select: { id: true, name: true } } },
     orderBy: { date: "desc" },
   });
 
@@ -23,6 +24,7 @@ export async function POST(request: NextRequest) {
       categoryId: body.categoryId,
       recurring: body.recurring || false,
       recurringInterval: body.recurring ? body.recurringInterval || null : null,
+      tripId: body.tripId || null,
     },
   });
 
