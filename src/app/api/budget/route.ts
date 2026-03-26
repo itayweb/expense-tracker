@@ -34,6 +34,14 @@ export async function GET() {
       console.error("Recurring generation error (non-fatal):", err);
     }
 
+    // Ensure Trips system category exists (lazy creation for existing budgets)
+    const hasTripsCategory = budget.categories.some((c) => c.isSystem);
+    if (!hasTripsCategory) {
+      await prisma.category.create({
+        data: { name: "Trips", type: "monthly", budgetAmount: 0, isSystem: true, budgetId: budget.id },
+      });
+    }
+
     // Re-fetch after generation to include new entries
     const updatedBudget = await prisma.budget.findUnique({
       where: { month_year: { month, year } },
@@ -113,20 +121,23 @@ export async function POST(request: NextRequest) {
       where: { month, year },
     });
 
-    // Create new budget with categories
+    // Create new budget with categories + Trips system category
     return tx.budget.create({
       data: {
         monthlyIncome,
         month,
         year,
         categories: {
-          create: categories.map(
-            (cat: { name: string; type: string; budgetAmount: number }) => ({
-              name: cat.name,
-              type: cat.type,
-              budgetAmount: cat.budgetAmount,
-            })
-          ),
+          create: [
+            ...categories.map(
+              (cat: { name: string; type: string; budgetAmount: number }) => ({
+                name: cat.name,
+                type: cat.type,
+                budgetAmount: cat.budgetAmount,
+              })
+            ),
+            { name: "Trips", type: "monthly", budgetAmount: 0, isSystem: true },
+          ],
         },
       },
       include: {
@@ -149,19 +160,19 @@ export async function PUT(request: NextRequest) {
       data: { monthlyIncome },
     });
 
-    // Delete removed categories
+    // Delete removed categories (never delete system categories)
     if (deletedCategoryIds?.length) {
       await tx.category.deleteMany({
-        where: { id: { in: deletedCategoryIds } },
+        where: { id: { in: deletedCategoryIds }, isSystem: false },
       });
     }
 
-    // Update existing or create new categories
+    // Update existing or create new categories (skip system categories)
     for (const cat of categories as { id?: number; name: string; type: string; budgetAmount: number }[]) {
       if (cat.id) {
         await tx.category.update({
           where: { id: cat.id },
-          data: { budgetAmount: cat.budgetAmount },
+          data: { budgetAmount: cat.budgetAmount, name: cat.name, type: cat.type },
         });
       } else {
         await tx.category.create({
@@ -173,6 +184,16 @@ export async function PUT(request: NextRequest) {
           },
         });
       }
+    }
+
+    // Ensure Trips system category still exists
+    const tripsCategory = await tx.category.findFirst({
+      where: { budgetId, isSystem: true },
+    });
+    if (!tripsCategory) {
+      await tx.category.create({
+        data: { name: "Trips", type: "monthly", budgetAmount: 0, isSystem: true, budgetId },
+      });
     }
   });
 

@@ -27,17 +27,21 @@ export default function WizardContainer({
   );
   const [categories, setCategories] = useState<WizardCategory[]>(
     isEdit
-      ? existingBudget.categories.map((c) => ({ name: c.name, type: c.type as "weekly" | "monthly" }))
+      ? existingBudget.categories
+          .filter((c) => !c.isSystem)
+          .map((c) => ({ name: c.name, type: c.type as "weekly" | "monthly" }))
       : []
   );
   const [budgetCategories, setBudgetCategories] = useState<WizardCategoryWithBudget[]>(
     isEdit
-      ? existingBudget.categories.map((c) => ({
-          name: c.name,
-          type: c.type as "weekly" | "monthly",
-          budgetAmount: c.budgetAmount,
-          id: c.id,
-        }))
+      ? existingBudget.categories
+          .filter((c) => !c.isSystem)
+          .map((c) => ({
+            name: c.name,
+            type: c.type as "weekly" | "monthly",
+            budgetAmount: c.budgetAmount,
+            id: c.id,
+          }))
       : []
   );
   const [budgetId] = useState(isEdit ? existingBudget.id : null);
