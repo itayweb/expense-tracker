@@ -4,6 +4,8 @@ import { useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
+import AddExpenseModal from "./AddExpenseModal";
+import ExpenseList from "./ExpenseList";
 import { TripItem } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 
@@ -32,6 +34,7 @@ export default function TripExpensesModal({
   const [savingDates, setSavingDates] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showAddExpense, setShowAddExpense] = useState(false);
 
   const handleComplete = async () => {
     setCompleting(true);
@@ -101,154 +104,131 @@ export default function TripExpensesModal({
     }
   };
 
-  const handleDeleteExpense = async (id: number) => {
-    try {
-      await fetch(`/api/expenses/${id}`, { method: "DELETE" });
-      onRefresh();
-    } catch (error) {
-      console.error("Failed to delete expense:", error);
-    }
-  };
-
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={trip.name} size="lg">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            {!editing && (
-              <span className="text-sm text-gray-500">
-                {trip.startDate
-                  ? new Date(trip.startDate).toLocaleDateString()
-                  : "No start date"}
-                {trip.endDate && ` — ${new Date(trip.endDate).toLocaleDateString()}`}
+    <>
+      <Modal isOpen={isOpen} onClose={onClose} title={trip.name} size="lg">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {!editing && (
+                <span className="text-sm text-gray-500">
+                  {trip.startDate
+                    ? new Date(trip.startDate).toLocaleDateString()
+                    : "No start date"}
+                  {trip.endDate && ` — ${new Date(trip.endDate).toLocaleDateString()}`}
+                </span>
+              )}
+              <span
+                className={`text-xs px-2 py-0.5 rounded-full ${
+                  trip.status === "active"
+                    ? "bg-green-100 text-green-700"
+                    : "bg-gray-100 text-gray-600"
+                }`}
+              >
+                {trip.status}
               </span>
+            </div>
+            {!editing && (
+              <button
+                onClick={() => setEditing(true)}
+                className="text-xs text-blue-500 hover:text-blue-700 underline"
+              >
+                Edit dates
+              </button>
             )}
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${
-                trip.status === "active"
-                  ? "bg-green-100 text-green-700"
-                  : "bg-gray-100 text-gray-600"
+          </div>
+
+          {editing && (
+            <div className="bg-gray-50 rounded-lg p-3 space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <Input
+                  id="trip-start-date"
+                  label="Start date"
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+                <Input
+                  id="trip-end-date"
+                  label="End date"
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={handleSaveDates} disabled={savingDates}>
+                  {savingDates ? "Saving..." : "Save dates"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => {
+                    setEditing(false);
+                    setStartDate(toDateInput(trip.startDate));
+                    setEndDate(toDateInput(trip.endDate));
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-teal-50 rounded-lg px-4 py-3">
+            <span className="text-sm text-teal-600">Total Spent</span>
+            <p className="text-2xl font-bold text-teal-900">
+              {formatCurrency(trip.totalSpent)}
+            </p>
+          </div>
+
+          <ExpenseList expenses={trip.expenses} onRefresh={onRefresh} />
+
+          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => setShowAddExpense(true)}>
+                + Add Expense
+              </Button>
+              {trip.status === "active" ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleComplete}
+                  disabled={completing}
+                >
+                  {completing ? "Completing..." : "Mark Completed"}
+                </Button>
+              ) : (
+                <Button variant="secondary" size="sm" onClick={handleReactivate}>
+                  Reactivate
+                </Button>
+              )}
+            </div>
+
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
+                confirmDelete
+                  ? "bg-red-600 text-white hover:bg-red-700"
+                  : "text-red-500 hover:text-red-700 hover:bg-red-50"
               }`}
             >
-              {trip.status}
-            </span>
-          </div>
-          {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="text-xs text-blue-500 hover:text-blue-700 underline"
-            >
-              Edit dates
+              {deleting ? "Deleting..." : confirmDelete ? "Confirm delete" : "Delete trip"}
             </button>
-          )}
-        </div>
-
-        {editing && (
-          <div className="bg-gray-50 rounded-lg p-3 space-y-3">
-            <div className="grid grid-cols-2 gap-3">
-              <Input
-                id="trip-start-date"
-                label="Start date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-              />
-              <Input
-                id="trip-end-date"
-                label="End date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={handleSaveDates} disabled={savingDates}>
-                {savingDates ? "Saving..." : "Save dates"}
-              </Button>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  setEditing(false);
-                  setStartDate(toDateInput(trip.startDate));
-                  setEndDate(toDateInput(trip.endDate));
-                }}
-              >
-                Cancel
-              </Button>
-            </div>
           </div>
-        )}
-
-        <div className="bg-teal-50 rounded-lg px-4 py-3">
-          <span className="text-sm text-teal-600">Total Spent</span>
-          <p className="text-2xl font-bold text-teal-900">
-            {formatCurrency(trip.totalSpent)}
-          </p>
         </div>
+      </Modal>
 
-        {trip.expenses.length === 0 ? (
-          <p className="text-sm text-gray-400 text-center py-2">No expenses yet</p>
-        ) : (
-          <div className="space-y-2">
-            {trip.expenses.map((expense) => (
-              <div
-                key={expense.id}
-                className="flex items-center justify-between text-sm py-1.5"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-gray-900 truncate">{expense.description}</p>
-                  <p className="text-xs text-gray-400">
-                    {new Date(expense.date).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2 ml-3">
-                  <span className="font-medium text-gray-700">
-                    {formatCurrency(expense.amount)}
-                  </span>
-                  <button
-                    onClick={() => handleDeleteExpense(expense.id)}
-                    className="text-gray-300 hover:text-red-500 text-lg leading-none"
-                  >
-                    &times;
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100">
-          <div className="flex gap-2">
-            {trip.status === "active" ? (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={handleComplete}
-                disabled={completing}
-              >
-                {completing ? "Completing..." : "Mark Completed"}
-              </Button>
-            ) : (
-              <Button variant="secondary" size="sm" onClick={handleReactivate}>
-                Reactivate
-              </Button>
-            )}
-          </div>
-
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-              confirmDelete
-                ? "bg-red-600 text-white hover:bg-red-700"
-                : "text-red-500 hover:text-red-700 hover:bg-red-50"
-            }`}
-          >
-            {deleting ? "Deleting..." : confirmDelete ? "Confirm delete" : "Delete trip"}
-          </button>
-        </div>
-      </div>
-    </Modal>
+      <AddExpenseModal
+        isOpen={showAddExpense}
+        onClose={() => setShowAddExpense(false)}
+        defaultTripId={trip.id}
+        onSaved={() => {
+          setShowAddExpense(false);
+          onRefresh();
+        }}
+      />
+    </>
   );
 }

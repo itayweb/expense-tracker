@@ -8,6 +8,7 @@ export interface WizardCategory {
 export interface WizardCategoryWithBudget extends WizardCategory {
   budgetAmount: number;
   id?: number;
+  isSystem?: boolean;
 }
 
 export interface WizardData {
@@ -64,6 +65,7 @@ export interface CategoryWithExpenses {
   type: string;
   budgetAmount: number;
   budgetId: number;
+  isSystem?: boolean;
   expenses: ExpenseItem[];
   totalSpent: number;
   weeklyInfo?: WeeklyInfoData;

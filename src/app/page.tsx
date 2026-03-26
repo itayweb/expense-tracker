@@ -50,7 +50,9 @@ export default function DashboardPage() {
   if (!budget) return null;
 
   const weeksInMonth = budget.weeksInMonth || 4;
-  const totalSpent = budget.categories.reduce(
+  const regularCategories = budget.categories.filter((cat) => !cat.isSystem);
+
+  const totalSpent = regularCategories.reduce(
     (sum, cat) => {
       if (cat.type === "weekly" && cat.weeklyInfo) {
         return sum + cat.weeklyInfo.totalMonthSpent;
@@ -59,7 +61,7 @@ export default function DashboardPage() {
     },
     0
   );
-  const totalAllocated = budget.categories.reduce(
+  const totalAllocated = regularCategories.reduce(
     (sum, cat) => {
       if (cat.type === "weekly") {
         return sum + cat.budgetAmount * weeksInMonth;
@@ -94,7 +96,7 @@ export default function DashboardPage() {
         </div>
 
         <CategoryGrid
-          categories={budget.categories}
+          categories={regularCategories}
           onRefresh={fetchBudget}
         />
         <TripSection onRefresh={fetchBudget} />
@@ -102,7 +104,7 @@ export default function DashboardPage() {
         <AddExpenseModal
           isOpen={showAddExpenseModal}
           onClose={() => setShowAddExpenseModal(false)}
-          categories={budget.categories}
+          categories={regularCategories}
           onSaved={fetchBudget}
         />
       </main>

@@ -26,9 +26,12 @@ model Category {
   type         String    // "weekly" or "monthly"
   budgetAmount Float
   budgetId     Int
+  isSystem     Boolean   @default(false)
   budget       Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
   expenses     Expense[]
   createdAt    DateTime  @default(now())
+
+  @@index([budgetId])
 }
 
 model Expense {
@@ -43,6 +46,10 @@ model Expense {
   tripId            Int?
   trip              Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
   createdAt         DateTime @default(now())
+
+  @@index([categoryId])
+  @@index([tripId])
+  @@index([date])
 }
 
 model Trip {

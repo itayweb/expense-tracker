@@ -56,13 +56,41 @@ Do not include any text before or after the JSON array.`;
 
 export function getFallbackSuggestions(
   monthlyIncome: number,
-  categories: WizardCategory[]
+  categories: WizardCategory[],
+  existingAmounts?: { name: string; type: string; budgetAmount: number }[]
 ): BudgetSuggestion[] {
+  // If existing amounts are provided, distribute proportionally
+  if (existingAmounts && existingAmounts.length > 0) {
+    const totalExistingMonthly = existingAmounts.reduce(
+      (sum, c) => sum + (c.type === "weekly" ? c.budgetAmount * 4.33 : c.budgetAmount),
+      0
+    );
+    if (totalExistingMonthly > 0) {
+      return categories.map((c) => {
+        const existing = existingAmounts.find(
+          (e) => e.name === c.name && e.type === c.type
+        );
+        const existingMonthly = existing
+          ? (existing.type === "weekly" ? existing.budgetAmount * 4.33 : existing.budgetAmount)
+          : 0;
+        const share = existingMonthly / totalExistingMonthly;
+        const monthlyAmount = Math.round(monthlyIncome * share);
+        return {
+          name: c.name,
+          type: c.type,
+          suggestedAmount: c.type === "weekly"
+            ? Math.round(monthlyAmount / 4.33)
+            : monthlyAmount,
+        };
+      });
+    }
+  }
+
+  // Equal distribution fallback
   const perCategoryMonthly = Math.floor(monthlyIncome / (categories.length + 1)); // +1 for savings buffer
   return categories.map((c) => ({
     name: c.name,
     type: c.type,
-    // For weekly categories, convert monthly share to per-week
     suggestedAmount: c.type === "weekly"
       ? Math.round(perCategoryMonthly / 4.33)
       : perCategoryMonthly,

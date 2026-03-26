@@ -26,7 +26,8 @@ export default function StepReview({
   const router = useRouter();
   const [saving, setSaving] = useState(false);
 
-  const totalAllocated = categories.reduce(
+  const regularCategories = categories.filter((cat) => !cat.isSystem);
+  const totalAllocated = regularCategories.reduce(
     (sum, cat) => sum + (cat.type === "weekly" ? cat.budgetAmount * 4.33 : cat.budgetAmount),
     0
   );
@@ -96,7 +97,7 @@ export default function StepReview({
       </div>
 
       <div className="space-y-2">
-        {categories.map((cat, index) => (
+        {regularCategories.map((cat, index) => (
           <div
             key={index}
             className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3"

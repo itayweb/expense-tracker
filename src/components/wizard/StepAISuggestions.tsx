@@ -35,7 +35,7 @@ export default function StepAISuggestions({
       const res = await fetch("/api/ai/suggest", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ monthlyIncome, categories }),
+        body: JSON.stringify({ monthlyIncome, categories, existingAmounts: budgetCategories }),
       });
       const data = await res.json();
       setSource(data.source);
@@ -44,19 +44,29 @@ export default function StepAISuggestions({
         const suggestion = (data.suggestions as BudgetSuggestion[]).find(
           (s) => s.name.toLowerCase() === cat.name.toLowerCase()
         );
+        const existing = budgetCategories.find(
+          (bc) => bc.name === cat.name && bc.type === cat.type
+        );
         return {
           ...cat,
-          budgetAmount: suggestion?.suggestedAmount || 0,
+          id: existing?.id,
+          budgetAmount: suggestion?.suggestedAmount ?? existing?.budgetAmount ?? 0,
         };
       });
       onChange(merged);
     } catch {
       setError("Failed to get suggestions. You can set amounts manually.");
       onChange(
-        categories.map((cat) => ({
-          ...cat,
-          budgetAmount: Math.floor(monthlyIncome / (categories.length + 1)),
-        }))
+        categories.map((cat) => {
+          const existing = budgetCategories.find(
+            (bc) => bc.name === cat.name && bc.type === cat.type
+          );
+          return {
+            ...cat,
+            id: existing?.id,
+            budgetAmount: Math.floor(monthlyIncome / (categories.length + 1)),
+          };
+        })
       );
     } finally {
       setLoading(false);
@@ -70,14 +80,17 @@ export default function StepAISuggestions({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const updateAmount = (index: number, amount: number) => {
-    const updated = [...budgetCategories];
-    updated[index] = { ...updated[index], budgetAmount: amount };
+  const updateAmount = (catId: number | undefined, catName: string, amount: number) => {
+    const updated = budgetCategories.map((cat) => {
+      const matches = catId ? cat.id === catId : (cat.name === catName);
+      return matches ? { ...cat, budgetAmount: amount } : cat;
+    });
     onChange(updated);
   };
 
-  // Convert to monthly equivalents for total calculation
-  const totalAllocated = budgetCategories.reduce(
+  // Convert to monthly equivalents for total calculation (exclude system categories)
+  const regularBudgetCategories = budgetCategories.filter((cat) => !cat.isSystem);
+  const totalAllocated = regularBudgetCategories.reduce(
     (sum, cat) => sum + (cat.type === "weekly" ? cat.budgetAmount * 4.33 : cat.budgetAmount),
     0
   );
@@ -113,10 +126,10 @@ export default function StepAISuggestions({
         </div>
       )}
 
-      {!loading && budgetCategories.length > 0 && (
+      {!loading && regularBudgetCategories.length > 0 && (
         <>
           <div className="space-y-3 max-h-72 overflow-y-auto">
-            {budgetCategories.map((cat, index) => (
+            {regularBudgetCategories.map((cat, index) => (
               <div
                 key={index}
                 className="flex items-center gap-3 bg-gray-50 rounded-lg px-4 py-3"
@@ -148,7 +161,7 @@ export default function StepAISuggestions({
                     step={50}
                     value={cat.budgetAmount || ""}
                     onChange={(e) =>
-                      updateAmount(index, parseFloat(e.target.value) || 0)
+                      updateAmount(cat.id, cat.name, parseFloat(e.target.value) || 0)
                     }
                     className="w-24 rounded border border-gray-300 px-2 py-1 text-right text-gray-900 focus:border-blue-500 focus:outline-none"
                   />
