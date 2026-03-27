@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { WizardCategory, CategoryType } from "@/lib/types";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
 interface StepCategoriesProps {
   categories: WizardCategory[];
@@ -30,6 +31,7 @@ export default function StepCategories({
 }: StepCategoriesProps) {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<CategoryType>("monthly");
+  const [pickerForIndex, setPickerForIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -37,18 +39,41 @@ export default function StepCategories({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (pickerForIndex === null) return;
+    const onDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (!el) return;
+      // Close on outside click (best-effort; picker is rendered inline)
+      if (!el.closest?.("[data-emoji-picker-root]")) {
+        setPickerForIndex(null);
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [pickerForIndex]);
+
   const currentCategories =
     categories.length > 0 ? categories : DEFAULT_CATEGORIES;
 
   const addCategory = () => {
     if (newName.trim()) {
-      onChange([...currentCategories, { name: newName.trim(), type: newType }]);
+      onChange([
+        ...currentCategories,
+        { name: newName.trim(), type: newType, emoji: undefined },
+      ]);
       setNewName("");
     }
   };
 
   const removeCategory = (index: number) => {
     onChange(currentCategories.filter((_, i) => i !== index));
+  };
+
+  const setEmojiFor = (index: number, emoji: string) => {
+    onChange(
+      currentCategories.map((c, i) => (i === index ? { ...c, emoji } : c))
+    );
   };
 
   return (
@@ -69,6 +94,37 @@ export default function StepCategories({
             className="flex items-center justify-between bg-[#242442] rounded-lg px-4 py-2"
           >
             <div className="flex items-center gap-3">
+              <div className="relative" data-emoji-picker-root>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPickerForIndex((prev) => (prev === index ? null : index))
+                  }
+                  className="w-9 h-9 rounded-full bg-white/[0.08] hover:bg-white/[0.12] border border-white/[0.12] flex items-center justify-center text-base leading-none"
+                  aria-label="Pick emoji"
+                  title="Pick emoji"
+                >
+                  {cat.emoji ?? "📦"}
+                </button>
+                {pickerForIndex === index && (
+                  <div className="absolute left-0 top-11 z-50">
+                    <div className="rounded-xl overflow-hidden border border-white/[0.12] shadow-xl shadow-black/40">
+                      <EmojiPicker
+                        theme={Theme.DARK}
+                        skinTonesDisabled
+                        searchDisabled={false}
+                        onEmojiClick={(emojiData: EmojiClickData) => {
+                          setEmojiFor(index, emojiData.emoji);
+                          setPickerForIndex(null);
+                        }}
+                        width={320}
+                        height={360}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <span className="font-medium text-slate-100">{cat.name}</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${

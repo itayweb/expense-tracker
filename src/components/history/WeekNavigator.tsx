@@ -49,14 +49,12 @@ export default function WeekNavigator({ weekNumber, weeks, onNavigate }: WeekNav
         onClick={goPrev}
         disabled={!canGoPrev}
         className={`px-2 py-1 text-lg transition-colors ${
-          canGoPrev
-            ? "text-slate-400 hover:text-slate-100"
-            : "text-slate-600 cursor-not-allowed"
+          canGoPrev ? "text-gray-400 hover:text-gray-700" : "text-gray-200 cursor-not-allowed"
         }`}
       >
         &larr;
       </button>
-      <span className="text-sm font-medium text-slate-300 min-w-48 text-center">
+      <span className="text-sm font-medium text-gray-600 min-w-48 text-center">
         {weekNumber === null ? (
           "All Weeks"
         ) : currentWeek ? (
@@ -72,9 +70,7 @@ export default function WeekNavigator({ weekNumber, weeks, onNavigate }: WeekNav
         onClick={goNext}
         disabled={!canGoNext}
         className={`px-2 py-1 text-lg transition-colors ${
-          canGoNext
-            ? "text-slate-400 hover:text-slate-100"
-            : "text-slate-600 cursor-not-allowed"
+          canGoNext ? "text-gray-400 hover:text-gray-700" : "text-gray-200 cursor-not-allowed"
         }`}
       >
         &rarr;

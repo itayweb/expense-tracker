@@ -1,8 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { getWeekBoundaries } from "@/lib/weekUtils";
+import { getAuthedUserId } from "@/lib/auth/server";
 
 export async function GET(request: NextRequest) {
+  const userId = await getAuthedUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const params = request.nextUrl.searchParams;
   const month = parseInt(params.get("month") || String(new Date().getMonth() + 1));
   const year = parseInt(params.get("year") || String(new Date().getFullYear()));
@@ -10,7 +16,7 @@ export async function GET(request: NextRequest) {
   const categoryId = params.get("categoryId") ? parseInt(params.get("categoryId")!) : null;
 
   const budget = await prisma.budget.findUnique({
-    where: { month_year: { month, year } },
+    where: { userId_month_year: { userId, month, year } },
     include: {
       categories: {
         include: {
@@ -58,6 +64,7 @@ export async function GET(request: NextRequest) {
     return {
       id: cat.id,
       name: cat.name,
+      emoji: cat.emoji,
       type: cat.type,
       budgetAmount: cat.budgetAmount,
       isSystem: cat.isSystem,

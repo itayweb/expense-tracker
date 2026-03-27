@@ -46,6 +46,7 @@ export default function StepReview({
             categories: categories.map((cat) => ({
               ...(cat.id ? { id: cat.id } : {}),
               name: cat.name,
+              emoji: cat.emoji,
               type: cat.type,
               budgetAmount: cat.budgetAmount,
             })),
@@ -63,6 +64,7 @@ export default function StepReview({
             year: now.getFullYear(),
             categories: categories.map((cat) => ({
               name: cat.name,
+              emoji: cat.emoji,
               type: cat.type,
               budgetAmount: cat.budgetAmount,
             })),

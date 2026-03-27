@@ -52,7 +52,6 @@ export default function CategoryExpensesModal({
       }
     }
 
-    // Monthly: filter to current month
     const filtered = category.expenses.filter((exp) => {
       const d = new Date(exp.date);
       return d.getMonth() + 1 === month && d.getFullYear() === year;
@@ -76,21 +75,21 @@ export default function CategoryExpensesModal({
       <Modal isOpen={isOpen} onClose={onClose} title={category.name} size="lg">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-400">{periodLabel}</span>
+            <span className="text-sm text-gray-400">{periodLabel}</span>
             <span
               className={`text-xs px-2 py-0.5 rounded-full ${
                 category.type === "weekly"
-                  ? "bg-blue-500/15 text-blue-400"
-                  : "bg-purple-500/15 text-purple-400"
+                  ? "bg-blue-50 text-blue-500"
+                  : "bg-purple-50 text-purple-500"
               }`}
             >
               {category.type}
             </span>
           </div>
 
-          <div className="bg-[#242442] rounded-lg px-4 py-3 flex justify-between items-center">
-            <span className="text-sm text-slate-400">Spent</span>
-            <span className="font-semibold text-slate-100">
+          <div className="bg-gray-50 rounded-xl px-4 py-3 flex justify-between items-center">
+            <span className="text-sm text-gray-500">Spent</span>
+            <span className="font-semibold text-gray-900">
               {formatCurrency(totalSpent)} / {formatCurrency(displayBudget)}
             </span>
           </div>
