@@ -7,12 +7,14 @@ import WeekNavigator from "@/components/history/WeekNavigator";
 import Card from "@/components/ui/Card";
 import { formatCurrency } from "@/lib/utils";
 import { ExpenseItem } from "@/lib/types";
+import ExpenseList from "@/components/dashboard/ExpenseList";
 
 interface HistoryCategory {
   id: number;
   name: string;
   type: string;
   budgetAmount: number;
+  isSystem?: boolean;
   expenses: ExpenseItem[];
   totalSpent: number;
 }
@@ -69,7 +71,7 @@ export default function HistoryPage() {
     setCategoryFilter(null);
   };
 
-  const grandTotal = data?.categories.reduce((sum, cat) => sum + cat.totalSpent, 0) || 0;
+  const grandTotal = data?.categories.filter((cat) => !cat.isSystem).reduce((sum, cat) => sum + cat.totalSpent, 0) || 0;
 
   return (
     <div className="min-h-screen bg-[#0F0F1A]">
@@ -153,35 +155,7 @@ export default function HistoryPage() {
                   </span>
                 </div>
 
-                {cat.expenses.length === 0 ? (
-                  <p className="text-sm text-slate-500 text-center py-2">No expenses</p>
-                ) : (
-                  <div className="space-y-2">
-                    {cat.expenses.map((exp) => (
-                      <div
-                        key={exp.id}
-                        className="flex items-center justify-between text-sm py-1.5 border-t border-white/[0.05]"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-1.5">
-                            <p className="text-slate-200 truncate">{exp.description}</p>
-                            {exp.recurring && (
-                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 shrink-0">
-                                {exp.recurringInterval === "weekly" ? "weekly" : "monthly"}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500">
-                            {new Date(exp.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className="font-medium text-slate-300 ml-3">
-                          {formatCurrency(exp.amount)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                <ExpenseList expenses={cat.expenses} onRefresh={fetchHistory} showDelete={false} />
               </Card>
             ))}
 

@@ -14,6 +14,8 @@ export async function PUT(
       ...(body.amount !== undefined && { amount: body.amount }),
       ...(body.description !== undefined && { description: body.description }),
       ...(body.date !== undefined && { date: new Date(body.date) }),
+      ...(body.recurring !== undefined && { recurring: body.recurring }),
+      ...(body.recurringInterval !== undefined && { recurringInterval: body.recurringInterval }),
     },
   });
 

@@ -60,6 +60,7 @@ export async function GET(request: NextRequest) {
       name: cat.name,
       type: cat.type,
       budgetAmount: cat.budgetAmount,
+      isSystem: cat.isSystem,
       expenses,
       totalSpent: expenses.reduce((sum, exp) => sum + exp.amount, 0),
     };

@@ -7,17 +7,20 @@ import { ExpenseItem } from "@/lib/types";
 interface ExpenseListProps {
   expenses: ExpenseItem[];
   onRefresh: () => void;
+  showDelete?: boolean;
 }
 
 function toDateInput(dateStr: string): string {
   return new Date(dateStr).toISOString().split("T")[0];
 }
 
-export default function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
+export default function ExpenseList({ expenses, onRefresh, showDelete = true }: ExpenseListProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editAmount, setEditAmount] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editDate, setEditDate] = useState("");
+  const [editRecurring, setEditRecurring] = useState(false);
+  const [editRecurringInterval, setEditRecurringInterval] = useState<"weekly" | "monthly">("monthly");
   const [saving, setSaving] = useState(false);
 
   const startEdit = (expense: ExpenseItem) => {
@@ -25,9 +28,15 @@ export default function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
     setEditAmount(String(expense.amount));
     setEditDescription(expense.description);
     setEditDate(toDateInput(expense.date));
+    setEditRecurring(expense.recurring);
+    setEditRecurringInterval((expense.recurringInterval as "weekly" | "monthly") ?? "monthly");
   };
 
-  const cancelEdit = () => setEditingId(null);
+  const cancelEdit = () => {
+    setEditingId(null);
+    setEditRecurring(false);
+    setEditRecurringInterval("monthly");
+  };
 
   const saveEdit = async (id: number) => {
     setSaving(true);
@@ -39,6 +48,8 @@ export default function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
           amount: parseFloat(editAmount),
           description: editDescription,
           date: new Date(editDate).toISOString(),
+          recurring: editRecurring,
+          recurringInterval: editRecurring ? editRecurringInterval : null,
         }),
       });
       setEditingId(null);
@@ -86,13 +97,32 @@ export default function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
                 placeholder="Description"
               />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <input
                 type="date"
                 value={editDate}
                 onChange={(e) => setEditDate(e.target.value)}
                 className="rounded-lg border border-white/[0.15] bg-[#2A2A4A] px-2 py-1 text-sm text-slate-100 focus:border-emerald-500 focus:outline-none"
               />
+              <label className="flex items-center gap-1.5 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editRecurring}
+                  onChange={(e) => setEditRecurring(e.target.checked)}
+                  className="rounded border-white/[0.2] bg-[#2A2A4A] text-emerald-500 focus:ring-emerald-500"
+                />
+                <span className="text-xs text-slate-300">Recurring</span>
+              </label>
+              {editRecurring && (
+                <select
+                  value={editRecurringInterval}
+                  onChange={(e) => setEditRecurringInterval(e.target.value as "weekly" | "monthly")}
+                  className="rounded-lg border border-white/[0.15] bg-[#2A2A4A] px-2 py-1 text-xs text-slate-100 focus:border-emerald-500 focus:outline-none"
+                >
+                  <option value="weekly">Every week</option>
+                  <option value="monthly">Every month</option>
+                </select>
+              )}
               <button
                 onClick={() => saveEdit(expense.id)}
                 disabled={saving}
@@ -136,12 +166,14 @@ export default function ExpenseList({ expenses, onRefresh }: ExpenseListProps) {
               <span className="font-medium text-slate-300">
                 {formatCurrency(expense.amount)}
               </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); handleDelete(expense.id); }}
-                className="text-slate-500 hover:text-red-400 text-lg leading-none transition-colors"
-              >
-                &times;
-              </button>
+              {showDelete && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleDelete(expense.id); }}
+                  className="text-slate-500 hover:text-red-400 text-lg leading-none transition-colors"
+                >
+                  &times;
+                </button>
+              )}
             </div>
           </div>
         )
