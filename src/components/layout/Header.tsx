@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth/client";
@@ -18,12 +19,38 @@ const monthNames = [
 export default function Header({ currentTab, budgetMonth, budgetYear }: HeaderProps) {
   const router = useRouter();
   const { data } = authClient.useSession();
+  const [profileUsername, setProfileUsername] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!data?.session) {
+      setProfileUsername(null);
+      return;
+    }
+    let cancelled = false;
+    fetch("/api/user/profile")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (!cancelled && json?.username) setProfileUsername(json.username as string);
+        else if (!cancelled) setProfileUsername(null);
+      })
+      .catch(() => {
+        if (!cancelled) setProfileUsername(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [data?.session]);
+
   const now = new Date();
   const dayName = now.toLocaleDateString("en-US", { weekday: "short" });
   const dayNum = now.getDate();
   const monthShort = now.toLocaleDateString("en-US", { month: "short" });
-  const avatarInitial =
-    (data?.user?.email?.[0] || data?.user?.name?.[0] || "?").toUpperCase();
+  const avatarInitial = (
+    profileUsername?.[0] ||
+    data?.user?.name?.[0] ||
+    data?.user?.email?.[0] ||
+    "?"
+  ).toUpperCase();
 
   return (
     <header className="bg-white border-b border-gray-100 sticky top-0 z-30">
@@ -57,7 +84,7 @@ export default function Header({ currentTab, budgetMonth, budgetYear }: HeaderPr
           {/* Bell icon */}
           <button
             className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
-            title={data?.user?.email ?? "Account"}
+            title={profileUsername ?? data?.user?.name ?? data?.user?.email ?? "Account"}
             onClick={async () => {
               if (data?.session) {
                 await authClient.signOut();
