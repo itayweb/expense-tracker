@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 min-h-screen text-gray-900 antialiased">
+      <body className="bg-[#0F0F1A] min-h-screen text-slate-100 antialiased">
         {children}
       </body>
     </html>

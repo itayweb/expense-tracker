@@ -42,12 +42,12 @@ export default function TripSection({ onRefresh }: TripSectionProps) {
     return (
       <div className="mt-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">Trips</h2>
+          <h2 className="text-lg font-semibold text-slate-100">Trips</h2>
           <Button size="sm" onClick={() => setShowCreateModal(true)}>
             + New Trip
           </Button>
         </div>
-        <p className="text-sm text-gray-400 text-center py-4">
+        <p className="text-sm text-slate-500 text-center py-4">
           No trips yet. Create one to start tracking trip expenses.
         </p>
         <CreateTripModal
@@ -62,7 +62,7 @@ export default function TripSection({ onRefresh }: TripSectionProps) {
   return (
     <div className="mt-8">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">Trips</h2>
+        <h2 className="text-lg font-semibold text-slate-100">Trips</h2>
         <Button size="sm" onClick={() => setShowCreateModal(true)}>
           + New Trip
         </Button>
@@ -80,7 +80,7 @@ export default function TripSection({ onRefresh }: TripSectionProps) {
         <div className="mt-4">
           <button
             onClick={() => setShowCompleted(!showCompleted)}
-            className="text-sm text-gray-500 hover:text-gray-700 mb-3"
+            className="text-sm text-slate-400 hover:text-slate-200 mb-3 transition-colors"
           >
             {showCompleted ? "Hide" : "Show"} completed trips ({completedTrips.length})
           </button>

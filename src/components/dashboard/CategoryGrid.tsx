@@ -11,7 +11,7 @@ interface CategoryGridProps {
 export default function CategoryGrid({ categories, onRefresh }: CategoryGridProps) {
   if (categories.length === 0) {
     return (
-      <div className="text-center py-12 text-gray-500">
+      <div className="text-center py-12 text-slate-400">
         No categories yet. Set up your budget in the wizard.
       </div>
     );

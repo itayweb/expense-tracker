@@ -19,13 +19,13 @@ export default function Header({ currentTab, budgetMonth, budgetYear }: HeaderPr
   const router = useRouter();
 
   return (
-    <header className="bg-white border-b border-gray-200">
+    <header className="bg-[#1A1A2E]/80 backdrop-blur-md border-b border-white/[0.08]">
       <div className="max-w-6xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Expense Tracker</h1>
+            <h1 className="text-xl font-bold text-slate-100">Expense Tracker</h1>
             {budgetMonth && budgetYear && (
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-400">
                 {monthNames[budgetMonth - 1]} {budgetYear}
               </p>
             )}
@@ -41,20 +41,20 @@ export default function Header({ currentTab, budgetMonth, budgetYear }: HeaderPr
         <div className="flex gap-4 mt-3">
           <Link
             href="/"
-            className={`text-sm pb-1 border-b-2 ${
+            className={`text-sm pb-1 border-b-2 transition-colors ${
               currentTab === "dashboard"
-                ? "text-blue-600 font-medium border-blue-600"
-                : "text-gray-500 hover:text-gray-700 border-transparent"
+                ? "text-emerald-400 font-medium border-emerald-400"
+                : "text-slate-400 hover:text-slate-200 border-transparent"
             }`}
           >
             Dashboard
           </Link>
           <Link
             href="/history"
-            className={`text-sm pb-1 border-b-2 ${
+            className={`text-sm pb-1 border-b-2 transition-colors ${
               currentTab === "history"
-                ? "text-blue-600 font-medium border-blue-600"
-                : "text-gray-500 hover:text-gray-700 border-transparent"
+                ? "text-emerald-400 font-medium border-emerald-400"
+                : "text-slate-400 hover:text-slate-200 border-transparent"
             }`}
           >
             History

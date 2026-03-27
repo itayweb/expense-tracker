@@ -42,7 +42,7 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+        <div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
       </div>
     );
   }
@@ -72,7 +72,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0F0F1A]">
       <Header
         currentTab="dashboard"
         budgetMonth={budget.month}
@@ -89,7 +89,7 @@ export default function DashboardPage() {
         <div className="flex justify-end mb-4">
           <button
             onClick={() => setShowAddExpenseModal(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+            className="flex items-center gap-2 bg-gradient-to-r from-emerald-500 to-green-400 hover:from-emerald-600 hover:to-green-500 text-white text-sm font-medium px-4 py-2 rounded-xl shadow-lg shadow-emerald-500/25 transition-all"
           >
             + Add Expense
           </button>

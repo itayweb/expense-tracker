@@ -36,7 +36,7 @@ export default function WeekNavigator({ weekNumber, weeks, onNavigate }: WeekNav
     if (weekNumber !== null && weekNumber < weeks.length) {
       onNavigate(weekNumber + 1);
     } else if (weekNumber === weeks.length) {
-      onNavigate(null); // back to "all weeks"
+      onNavigate(null);
     }
   };
 
@@ -48,15 +48,15 @@ export default function WeekNavigator({ weekNumber, weeks, onNavigate }: WeekNav
       <button
         onClick={goPrev}
         disabled={!canGoPrev}
-        className={`px-2 py-1 text-lg ${
+        className={`px-2 py-1 text-lg transition-colors ${
           canGoPrev
-            ? "text-gray-500 hover:text-gray-700"
-            : "text-gray-300 cursor-not-allowed"
+            ? "text-slate-400 hover:text-slate-100"
+            : "text-slate-600 cursor-not-allowed"
         }`}
       >
         &larr;
       </button>
-      <span className="text-sm font-medium text-gray-700 min-w-48 text-center">
+      <span className="text-sm font-medium text-slate-300 min-w-48 text-center">
         {weekNumber === null ? (
           "All Weeks"
         ) : currentWeek ? (
@@ -71,10 +71,10 @@ export default function WeekNavigator({ weekNumber, weeks, onNavigate }: WeekNav
       <button
         onClick={goNext}
         disabled={!canGoNext}
-        className={`px-2 py-1 text-lg ${
+        className={`px-2 py-1 text-lg transition-colors ${
           canGoNext
-            ? "text-gray-500 hover:text-gray-700"
-            : "text-gray-300 cursor-not-allowed"
+            ? "text-slate-400 hover:text-slate-100"
+            : "text-slate-600 cursor-not-allowed"
         }`}
       >
         &rarr;

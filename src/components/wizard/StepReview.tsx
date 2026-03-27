@@ -37,7 +37,6 @@ export default function StepReview({
     setSaving(true);
     try {
       if (editMode && budgetId) {
-        // Update existing budget
         await fetch("/api/budget", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -54,7 +53,6 @@ export default function StepReview({
           }),
         });
       } else {
-        // Create new budget
         const now = new Date();
         await fetch("/api/budget", {
           method: "POST",
@@ -81,17 +79,17 @@ export default function StepReview({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">Review Your Budget</h2>
-        <p className="text-gray-500 mt-1">
+        <h2 className="text-2xl font-bold text-slate-100">Review Your Budget</h2>
+        <p className="text-slate-400 mt-1">
           {editMode
             ? "Review your changes and save."
             : "Everything look good? Save to start tracking your expenses."}
         </p>
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <p className="text-sm text-blue-600">Monthly Income</p>
-        <p className="text-3xl font-bold text-blue-900">
+      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
+        <p className="text-sm text-emerald-400">Monthly Income</p>
+        <p className="text-3xl font-bold text-emerald-300">
           {formatCurrency(monthlyIncome)}
         </p>
       </div>
@@ -100,32 +98,32 @@ export default function StepReview({
         {regularCategories.map((cat, index) => (
           <div
             key={index}
-            className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-3"
+            className="flex items-center justify-between bg-[#242442] rounded-lg px-4 py-3"
           >
             <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-900">{cat.name}</span>
+              <span className="font-medium text-slate-100">{cat.name}</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   cat.type === "weekly"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-purple-100 text-purple-700"
+                    ? "bg-blue-500/15 text-blue-400"
+                    : "bg-purple-500/15 text-purple-400"
                 }`}
               >
                 {cat.type}
               </span>
             </div>
-            <span className="font-semibold text-gray-900">
+            <span className="font-semibold text-slate-100">
               {formatCurrency(cat.budgetAmount)}{cat.type === "weekly" ? "/week" : "/mo"}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="flex justify-between items-center bg-gray-100 rounded-lg px-4 py-3">
-        <span className="font-medium text-gray-700">Unallocated</span>
+      <div className="flex justify-between items-center bg-white/[0.05] rounded-lg px-4 py-3">
+        <span className="font-medium text-slate-300">Unallocated</span>
         <span
           className={`font-bold ${
-            remaining >= 0 ? "text-green-600" : "text-red-600"
+            remaining >= 0 ? "text-emerald-400" : "text-red-400"
           }`}
         >
           {formatCurrency(remaining)}

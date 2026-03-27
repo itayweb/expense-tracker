@@ -13,7 +13,6 @@ interface AddExpenseModalProps {
   categoryName?: string;
   categories?: CategoryWithExpenses[];
   onSaved: () => void;
-  // When provided, expense is assigned to the Trips system category automatically
   defaultTripId?: number;
 }
 
@@ -36,10 +35,8 @@ export default function AddExpenseModal({
   const [recurringInterval, setRecurringInterval] = useState<"weekly" | "monthly">("monthly");
   const [saving, setSaving] = useState(false);
 
-  // When adding a trip expense, no category selection needed — API auto-assigns to Trips system category
   const isTripExpense = !!defaultTripId;
 
-  // Determine effective categoryId (not needed for trip expenses)
   const effectiveCategoryId = initialCategoryId
     ? String(initialCategoryId)
     : selectedCategoryId;
@@ -68,7 +65,6 @@ export default function AddExpenseModal({
           amount: parseFloat(amount),
           description,
           date: new Date(date).toISOString(),
-          // For trip expenses, omit categoryId — server auto-assigns to Trips system category
           ...(isTripExpense ? {} : { categoryId: parseInt(effectiveCategoryId) }),
           recurring: isTripExpense ? false : recurring,
           recurringInterval: (!isTripExpense && recurring) ? recurringInterval : null,
@@ -97,14 +93,14 @@ export default function AddExpenseModal({
       <form onSubmit={handleSubmit} className="space-y-4">
         {!isTripExpense && !initialCategoryId && categories && categories.length > 0 && (
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-slate-400 mb-1">
               Category
             </label>
             <select
               value={selectedCategoryId}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
               required
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-xl border border-white/[0.15] bg-[#242442] px-3 py-2 text-slate-100 text-sm focus:border-emerald-500 focus:outline-none"
             >
               <option value="">Select a category</option>
               {categories.map((cat) => (
@@ -148,15 +144,15 @@ export default function AddExpenseModal({
                 type="checkbox"
                 checked={recurring}
                 onChange={(e) => setRecurring(e.target.checked)}
-                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="rounded border-white/[0.2] bg-[#242442] text-emerald-500 focus:ring-emerald-500"
               />
-              <span className="text-sm text-gray-700">Recurring expense</span>
+              <span className="text-sm text-slate-300">Recurring expense</span>
             </label>
             {recurring && (
               <select
                 value={recurringInterval}
                 onChange={(e) => setRecurringInterval(e.target.value as "weekly" | "monthly")}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-sm focus:border-blue-500 focus:outline-none"
+                className="w-full rounded-xl border border-white/[0.15] bg-[#242442] px-3 py-2 text-slate-100 text-sm focus:border-emerald-500 focus:outline-none"
               >
                 <option value="weekly">Every week</option>
                 <option value="monthly">Every month</option>

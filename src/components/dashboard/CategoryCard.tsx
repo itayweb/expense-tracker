@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Card from "@/components/ui/Card";
-import ProgressBar from "@/components/ui/ProgressBar";
+import DonutChart from "@/components/ui/DonutChart";
 import { CategoryWithExpenses } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
 import CategoryExpensesModal from "./CategoryExpensesModal";
@@ -25,55 +25,47 @@ export default function CategoryCard({ category, onRefresh }: CategoryCardProps)
 
   return (
     <>
-      <Card className="flex flex-col">
+      <Card className="flex flex-col hover:border-white/[0.15] transition-all">
         <div
-          className="cursor-pointer"
+          className="cursor-pointer flex items-center gap-4"
           onClick={() => setShowExpensesModal(true)}
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-gray-900">{category.name}</h3>
+          <DonutChart
+            current={displaySpent}
+            max={displayBudget}
+            size={64}
+            strokeWidth={6}
+          />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-slate-100 truncate">{category.name}</h3>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   category.type === "weekly"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-purple-100 text-purple-700"
+                    ? "bg-blue-500/15 text-blue-400"
+                    : "bg-purple-500/15 text-purple-400"
                 }`}
               >
                 {category.type}
               </span>
               {isWeekly && (
-                <span className="text-xs text-gray-400">
-                  Week {category.weeklyInfo!.currentWeekNumber}
+                <span className="text-xs text-slate-500">
+                  Wk {category.weeklyInfo!.currentWeekNumber}
                 </span>
               )}
             </div>
-          </div>
 
-          <div className="flex justify-between text-sm text-gray-500 mb-2">
-            <span>
+            <div className="text-sm text-slate-400">
               {formatCurrency(displaySpent)} / {formatCurrency(displayBudget)}
               {isWeekly ? "/week" : "/month"}
-            </span>
-            {isWeekly && (
-              <span className="text-xs text-gray-400">
-                {formatCurrency(category.budgetAmount)}/week budget
-              </span>
+            </div>
+
+            {isWeekly && category.weeklyInfo!.carryOverDebt > 0 && (
+              <p className="text-xs text-red-400 mt-0.5">
+                {formatCurrency(category.weeklyInfo!.carryOverDebt)} carried from prior weeks
+              </p>
             )}
           </div>
-
-          {isWeekly && category.weeklyInfo!.carryOverDebt > 0 && (
-            <p className="text-xs text-red-500 mb-1">
-              {formatCurrency(category.weeklyInfo!.carryOverDebt)} carried from prior weeks
-            </p>
-          )}
-
-          <ProgressBar
-            current={displaySpent}
-            max={displayBudget}
-            showLabel={false}
-            height="h-2.5"
-          />
         </div>
       </Card>
 

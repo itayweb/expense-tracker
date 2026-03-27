@@ -72,7 +72,7 @@ export default function HistoryPage() {
   const grandTotal = data?.categories.reduce((sum, cat) => sum + cat.totalSpent, 0) || 0;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#0F0F1A]">
       <Header
         currentTab="history"
         budgetMonth={data?.budget?.month}
@@ -98,7 +98,7 @@ export default function HistoryPage() {
               onChange={(e) =>
                 setCategoryFilter(e.target.value ? parseInt(e.target.value) : null)
               }
-              className="rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:outline-none"
+              className="rounded-xl border border-white/[0.15] bg-[#242442] px-3 py-2 text-sm text-slate-200 focus:border-emerald-500 focus:outline-none"
             >
               <option value="">All Categories</option>
               {data.categories.map((cat) => (
@@ -112,13 +112,13 @@ export default function HistoryPage() {
 
         {loading && (
           <div className="flex justify-center py-12">
-            <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full" />
+            <div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
           </div>
         )}
 
         {!loading && !data?.budget && (
           <Card>
-            <p className="text-gray-500 text-center py-8">
+            <p className="text-slate-400 text-center py-8">
               No budget found for this month.
             </p>
           </Card>
@@ -127,55 +127,55 @@ export default function HistoryPage() {
         {!loading && data?.budget && (
           <>
             <Card className="text-center">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-slate-400">
                 Total spent {weekNumber ? `in Week ${weekNumber}` : "this month"}
               </p>
-              <p className="text-2xl font-bold text-gray-900">{formatCurrency(grandTotal)}</p>
+              <p className="text-2xl font-bold text-slate-100">{formatCurrency(grandTotal)}</p>
             </Card>
 
             {data.categories.map((cat) => (
               <Card key={cat.id}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{cat.name}</h3>
+                    <h3 className="font-semibold text-slate-100">{cat.name}</h3>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
                         cat.type === "weekly"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-purple-100 text-purple-700"
+                          ? "bg-blue-500/15 text-blue-400"
+                          : "bg-purple-500/15 text-purple-400"
                       }`}
                     >
                       {cat.type}
                     </span>
                   </div>
-                  <span className="font-semibold text-gray-700">
+                  <span className="font-semibold text-slate-300">
                     {formatCurrency(cat.totalSpent)}
                   </span>
                 </div>
 
                 {cat.expenses.length === 0 ? (
-                  <p className="text-sm text-gray-400 text-center py-2">No expenses</p>
+                  <p className="text-sm text-slate-500 text-center py-2">No expenses</p>
                 ) : (
                   <div className="space-y-2">
                     {cat.expenses.map((exp) => (
                       <div
                         key={exp.id}
-                        className="flex items-center justify-between text-sm py-1.5 border-t border-gray-50"
+                        className="flex items-center justify-between text-sm py-1.5 border-t border-white/[0.05]"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <p className="text-gray-900 truncate">{exp.description}</p>
+                            <p className="text-slate-200 truncate">{exp.description}</p>
                             {exp.recurring && (
-                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 shrink-0">
+                              <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 shrink-0">
                                 {exp.recurringInterval === "weekly" ? "weekly" : "monthly"}
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-gray-400">
+                          <p className="text-xs text-slate-500">
                             {new Date(exp.date).toLocaleDateString()}
                           </p>
                         </div>
-                        <span className="font-medium text-gray-700 ml-3">
+                        <span className="font-medium text-slate-300 ml-3">
                           {formatCurrency(exp.amount)}
                         </span>
                       </div>
@@ -187,7 +187,7 @@ export default function HistoryPage() {
 
             {data.categories.length === 0 && (
               <Card>
-                <p className="text-gray-500 text-center py-4">No expenses found.</p>
+                <p className="text-slate-400 text-center py-4">No expenses found.</p>
               </Card>
             )}
           </>
