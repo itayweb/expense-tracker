@@ -13,8 +13,8 @@ export default function StepIncome({ income, onChange, onNext }: StepIncomeProps
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">What&apos;s your monthly income?</h2>
-        <p className="text-gray-500 mt-1">
+        <h2 className="text-2xl font-bold text-slate-100">What&apos;s your monthly income?</h2>
+        <p className="text-slate-400 mt-1">
           Enter your total monthly take-home pay after taxes.
         </p>
       </div>

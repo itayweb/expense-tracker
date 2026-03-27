@@ -8,15 +8,21 @@ export function formatCurrency(amount: number): string {
 }
 
 export function getProgressColor(percentage: number): string {
-  if (percentage < 60) return "bg-green-500";
-  if (percentage < 85) return "bg-yellow-500";
-  return "bg-red-500";
+  if (percentage < 60) return "bg-emerald-500";
+  if (percentage < 85) return "bg-amber-400";
+  return "bg-red-400";
 }
 
 export function getProgressTextColor(percentage: number): string {
-  if (percentage < 60) return "text-green-600";
-  if (percentage < 85) return "text-yellow-600";
-  return "text-red-600";
+  if (percentage < 60) return "text-emerald-400";
+  if (percentage < 85) return "text-amber-400";
+  return "text-red-400";
+}
+
+export function getDonutStrokeColor(percentage: number): string {
+  if (percentage < 60) return "#4ADE80";
+  if (percentage < 85) return "#FBBF24";
+  return "#F87171";
 }
 
 export function clamp(value: number, min: number, max: number): number {

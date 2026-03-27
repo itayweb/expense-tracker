@@ -76,21 +76,21 @@ export default function CategoryExpensesModal({
       <Modal isOpen={isOpen} onClose={onClose} title={category.name} size="lg">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-500">{periodLabel}</span>
+            <span className="text-sm text-slate-400">{periodLabel}</span>
             <span
               className={`text-xs px-2 py-0.5 rounded-full ${
                 category.type === "weekly"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-purple-100 text-purple-700"
+                  ? "bg-blue-500/15 text-blue-400"
+                  : "bg-purple-500/15 text-purple-400"
               }`}
             >
               {category.type}
             </span>
           </div>
 
-          <div className="bg-gray-50 rounded-lg px-4 py-3 flex justify-between items-center">
-            <span className="text-sm text-gray-600">Spent</span>
-            <span className="font-semibold text-gray-900">
+          <div className="bg-[#242442] rounded-lg px-4 py-3 flex justify-between items-center">
+            <span className="text-sm text-slate-400">Spent</span>
+            <span className="font-semibold text-slate-100">
               {formatCurrency(totalSpent)} / {formatCurrency(displayBudget)}
             </span>
           </div>

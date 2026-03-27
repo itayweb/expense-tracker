@@ -54,10 +54,10 @@ export default function StepCategories({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-slate-100">
           Set up your expense categories
         </h2>
-        <p className="text-gray-500 mt-1">
+        <p className="text-slate-400 mt-1">
           Add or remove categories. Mark each as weekly or monthly.
         </p>
       </div>
@@ -66,15 +66,15 @@ export default function StepCategories({
         {currentCategories.map((cat, index) => (
           <div
             key={index}
-            className="flex items-center justify-between bg-gray-50 rounded-lg px-4 py-2"
+            className="flex items-center justify-between bg-[#242442] rounded-lg px-4 py-2"
           >
             <div className="flex items-center gap-3">
-              <span className="font-medium text-gray-900">{cat.name}</span>
+              <span className="font-medium text-slate-100">{cat.name}</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   cat.type === "weekly"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-purple-100 text-purple-700"
+                    ? "bg-blue-500/15 text-blue-400"
+                    : "bg-purple-500/15 text-purple-400"
                 }`}
               >
                 {cat.type}
@@ -82,7 +82,7 @@ export default function StepCategories({
             </div>
             <button
               onClick={() => removeCategory(index)}
-              className="text-gray-400 hover:text-red-500 text-lg"
+              className="text-slate-500 hover:text-red-400 text-lg transition-colors"
             >
               &times;
             </button>
@@ -104,7 +104,7 @@ export default function StepCategories({
         <select
           value={newType}
           onChange={(e) => setNewType(e.target.value as CategoryType)}
-          className="rounded-lg border border-gray-300 px-3 py-2 text-gray-900 focus:border-blue-500 focus:outline-none"
+          className="rounded-xl border border-white/[0.15] bg-[#242442] px-3 py-2 text-slate-100 focus:border-emerald-500 focus:outline-none"
         >
           <option value="monthly">Monthly</option>
           <option value="weekly">Weekly</option>

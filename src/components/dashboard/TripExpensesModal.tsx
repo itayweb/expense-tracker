@@ -111,7 +111,7 @@ export default function TripExpensesModal({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {!editing && (
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-slate-400">
                   {trip.startDate
                     ? new Date(trip.startDate).toLocaleDateString()
                     : "No start date"}
@@ -121,8 +121,8 @@ export default function TripExpensesModal({
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   trip.status === "active"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-gray-100 text-gray-600"
+                    ? "bg-emerald-500/15 text-emerald-400"
+                    : "bg-white/[0.08] text-slate-400"
                 }`}
               >
                 {trip.status}
@@ -131,7 +131,7 @@ export default function TripExpensesModal({
             {!editing && (
               <button
                 onClick={() => setEditing(true)}
-                className="text-xs text-blue-500 hover:text-blue-700 underline"
+                className="text-xs text-emerald-400 hover:text-emerald-300 underline transition-colors"
               >
                 Edit dates
               </button>
@@ -139,7 +139,7 @@ export default function TripExpensesModal({
           </div>
 
           {editing && (
-            <div className="bg-gray-50 rounded-lg p-3 space-y-3">
+            <div className="bg-[#242442] rounded-lg p-3 space-y-3">
               <div className="grid grid-cols-2 gap-3">
                 <Input
                   id="trip-start-date"
@@ -175,16 +175,16 @@ export default function TripExpensesModal({
             </div>
           )}
 
-          <div className="bg-teal-50 rounded-lg px-4 py-3">
-            <span className="text-sm text-teal-600">Total Spent</span>
-            <p className="text-2xl font-bold text-teal-900">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-4 py-3">
+            <span className="text-sm text-emerald-400">Total Spent</span>
+            <p className="text-2xl font-bold text-emerald-300">
               {formatCurrency(trip.totalSpent)}
             </p>
           </div>
 
           <ExpenseList expenses={trip.expenses} onRefresh={onRefresh} />
 
-          <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between pt-2 border-t border-white/[0.08]">
             <div className="flex gap-2">
               <Button size="sm" onClick={() => setShowAddExpense(true)}>
                 + Add Expense
@@ -210,8 +210,8 @@ export default function TripExpensesModal({
               disabled={deleting}
               className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
                 confirmDelete
-                  ? "bg-red-600 text-white hover:bg-red-700"
-                  : "text-red-500 hover:text-red-700 hover:bg-red-50"
+                  ? "bg-red-500 text-white hover:bg-red-600"
+                  : "text-red-400 hover:text-red-300 hover:bg-red-500/10"
               }`}
             >
               {deleting ? "Deleting..." : confirmDelete ? "Confirm delete" : "Delete trip"}

@@ -18,7 +18,6 @@ export default function WizardContainer({
 }: WizardContainerProps) {
   const isEdit = mode === "edit" && existingBudget;
 
-  // Both modes: full 4-step flow
   const STEPS = ["Income", "Categories", "AI Budget", "Review"];
 
   const [step, setStep] = useState(0);
@@ -49,7 +48,6 @@ export default function WizardContainer({
 
   const handleCategoriesNext = () => {
     if (isEdit) {
-      // Merge: keep existing budget data for categories that still exist, add new ones with 0 budget
       const existingByKey = new Map(
         budgetCategories.map((bc) => [`${bc.name}::${bc.type}`, bc])
       );
@@ -59,7 +57,6 @@ export default function WizardContainer({
         return existing || { ...c, budgetAmount: 0 };
       });
 
-      // Track deleted categories that had an id
       const remainingKeys = new Set(categories.map((c) => `${c.name}::${c.type}`));
       const deleted = budgetCategories
         .filter((bc) => bc.id && !remainingKeys.has(`${bc.name}::${bc.type}`))
@@ -73,7 +70,6 @@ export default function WizardContainer({
     setStep(2);
   };
 
-  // Unified 4-step flow: Income (0) → Categories (1) → AI Budget (2) → Review (3)
   const renderStep = () => {
     switch (step) {
       case 0:
@@ -120,13 +116,13 @@ export default function WizardContainer({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#0F0F1A] flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <h1 className="text-3xl font-bold text-slate-100">
             {isEdit ? "Edit Budget" : "Budget Wizard"}
           </h1>
-          <p className="text-gray-500 mt-1">
+          <p className="text-slate-400 mt-1">
             {isEdit
               ? "Adjust your income, categories, and allocations"
               : "Set up your monthly budget in a few simple steps"}
@@ -140,15 +136,15 @@ export default function WizardContainer({
               <div
                 className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
                   index <= step
-                    ? "bg-blue-600 text-white"
-                    : "bg-gray-200 text-gray-500"
+                    ? "bg-gradient-to-r from-emerald-500 to-green-400 text-white"
+                    : "bg-white/[0.08] text-slate-500"
                 }`}
               >
                 {index + 1}
               </div>
               <span
                 className={`text-sm hidden sm:inline ${
-                  index <= step ? "text-blue-600 font-medium" : "text-gray-400"
+                  index <= step ? "text-emerald-400 font-medium" : "text-slate-500"
                 }`}
               >
                 {label}
@@ -156,7 +152,7 @@ export default function WizardContainer({
               {index < STEPS.length - 1 && (
                 <div
                   className={`w-8 h-0.5 ${
-                    index < step ? "bg-blue-600" : "bg-gray-200"
+                    index < step ? "bg-emerald-500" : "bg-white/[0.1]"
                   }`}
                 />
               )}
@@ -164,7 +160,7 @@ export default function WizardContainer({
           ))}
         </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
+        <div className="bg-[#1A1A2E] rounded-2xl shadow-lg shadow-black/20 border border-white/[0.08] p-8">
           {renderStep()}
         </div>
       </div>

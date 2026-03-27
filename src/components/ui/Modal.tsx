@@ -31,13 +31,13 @@ export default function Modal({ isOpen, onClose, title, children, size = "md" }:
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <div className={`relative bg-white rounded-xl shadow-xl p-6 w-full ${sizeClasses[size]} mx-4 max-h-[85vh] overflow-y-auto`}>
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className={`relative bg-[#1A1A2E] rounded-2xl shadow-2xl shadow-black/40 border border-white/[0.08] p-6 w-full ${sizeClasses[size]} mx-4 max-h-[85vh] overflow-y-auto`}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">{title}</h2>
+          <h2 className="text-lg font-semibold text-slate-100">{title}</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+            className="text-slate-500 hover:text-slate-300 text-xl leading-none transition-colors"
           >
             &times;
           </button>

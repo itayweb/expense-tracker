@@ -22,7 +22,7 @@ export default function ProgressBar({
 
   return (
     <div>
-      <div className={`w-full bg-gray-200 rounded-full ${height} overflow-hidden`}>
+      <div className={`w-full bg-white/[0.1] rounded-full ${height} overflow-hidden`}>
         <div
           className={`${colorClass} ${height} rounded-full transition-all duration-500 ${
             isOver ? "animate-pulse" : ""
@@ -31,7 +31,7 @@ export default function ProgressBar({
         />
       </div>
       {showLabel && (
-        <p className="text-sm text-gray-500 mt-1">
+        <p className="text-sm text-slate-400 mt-1">
           {Math.round(percentage)}% used
         </p>
       )}
