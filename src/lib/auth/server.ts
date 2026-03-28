@@ -15,13 +15,7 @@ export function authServer() {
       "Missing environment variable: NEON_AUTH_COOKIE_SECRET."
     );
   }
-  // Allow additional origins (e.g. Vercel preview/production URLs).
-  // Set BETTER_AUTH_TRUSTED_ORIGINS as a comma-separated list in your env.
-  const extraOrigins = process.env.BETTER_AUTH_TRUSTED_ORIGINS
-    ? process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",").map((o) => o.trim()).filter(Boolean)
-    : [];
-
-  _auth = createAuthServer(extraOrigins.length ? { trustedOrigins: extraOrigins } : undefined);
+  _auth = createAuthServer();
   return _auth;
 }
 
