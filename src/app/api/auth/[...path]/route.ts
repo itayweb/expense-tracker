@@ -1,15 +1,36 @@
+import { NextRequest } from "next/server";
 import { authApiHandler } from "@neondatabase/auth/next/server";
 
-const handler = () => authApiHandler();
+const inner = authApiHandler();
 
-export const GET = (...args: Parameters<ReturnType<typeof authApiHandler>["GET"]>) =>
-  handler().GET(...args);
-export const POST = (...args: Parameters<ReturnType<typeof authApiHandler>["POST"]>) =>
-  handler().POST(...args);
-export const PUT = (...args: Parameters<ReturnType<typeof authApiHandler>["PUT"]>) =>
-  handler().PUT(...args);
-export const DELETE = (...args: Parameters<ReturnType<typeof authApiHandler>["DELETE"]>) =>
-  handler().DELETE(...args);
-export const PATCH = (...args: Parameters<ReturnType<typeof authApiHandler>["PATCH"]>) =>
-  handler().PATCH(...args);
+/**
+ * Normalize the Origin header to the production URL before forwarding to
+ * the Neon Auth server. This lets a single trusted origin cover all
+ * Vercel preview deployments (which have unique, unpredictable URLs).
+ *
+ * Set NEXT_PUBLIC_APP_URL=https://your-app.vercel.app in Vercel env vars.
+ */
+function withNormalizedOrigin(req: NextRequest): NextRequest {
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+  if (!appUrl) return req;
 
+  const origin = appUrl.startsWith("http") ? appUrl : `https://${appUrl}`;
+  const headers = new Headers(req.headers);
+  headers.set("origin", origin);
+  return new NextRequest(req.url, {
+    method: req.method,
+    headers,
+    body: req.body,
+  });
+}
+
+type HandlerArgs = Parameters<ReturnType<typeof authApiHandler>["GET"]>;
+
+const handle = (req: NextRequest, ctx: HandlerArgs[1]) =>
+  inner.GET(withNormalizedOrigin(req), ctx);
+
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const DELETE = handle;
+export const PATCH = handle;
