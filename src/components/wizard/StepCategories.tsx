@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { WizardCategory, CategoryType } from "@/lib/types";
+import EmojiPicker, { EmojiClickData, Theme } from "emoji-picker-react";
 
 interface StepCategoriesProps {
   categories: WizardCategory[];
@@ -30,6 +31,7 @@ export default function StepCategories({
 }: StepCategoriesProps) {
   const [newName, setNewName] = useState("");
   const [newType, setNewType] = useState<CategoryType>("monthly");
+  const [pickerForIndex, setPickerForIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (categories.length === 0) {
@@ -37,12 +39,28 @@ export default function StepCategories({
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  useEffect(() => {
+    if (pickerForIndex === null) return;
+    const onDown = (e: MouseEvent) => {
+      const el = e.target as HTMLElement | null;
+      if (!el) return;
+      if (!el.closest?.("[data-emoji-picker-root]")) {
+        setPickerForIndex(null);
+      }
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [pickerForIndex]);
+
   const currentCategories =
     categories.length > 0 ? categories : DEFAULT_CATEGORIES;
 
   const addCategory = () => {
     if (newName.trim()) {
-      onChange([...currentCategories, { name: newName.trim(), type: newType }]);
+      onChange([
+        ...currentCategories,
+        { name: newName.trim(), type: newType, emoji: undefined },
+      ]);
       setNewName("");
     }
   };
@@ -51,13 +69,19 @@ export default function StepCategories({
     onChange(currentCategories.filter((_, i) => i !== index));
   };
 
+  const setEmojiFor = (index: number, emoji: string) => {
+    onChange(
+      currentCategories.map((c, i) => (i === index ? { ...c, emoji } : c))
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-100">
+        <h2 className="text-2xl font-bold text-gray-900">
           Set up your expense categories
         </h2>
-        <p className="text-slate-400 mt-1">
+        <p className="text-gray-500 mt-1">
           Add or remove categories. Mark each as weekly or monthly.
         </p>
       </div>
@@ -66,15 +90,46 @@ export default function StepCategories({
         {currentCategories.map((cat, index) => (
           <div
             key={index}
-            className="flex items-center justify-between bg-[#242442] rounded-lg px-4 py-2"
+            className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-2 border border-gray-100"
           >
             <div className="flex items-center gap-3">
-              <span className="font-medium text-slate-100">{cat.name}</span>
+              <div className="relative" data-emoji-picker-root>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setPickerForIndex((prev) => (prev === index ? null : index))
+                  }
+                  className="w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 border border-gray-200 flex items-center justify-center text-base leading-none"
+                  aria-label="Pick emoji"
+                  title="Pick emoji"
+                >
+                  {cat.emoji ?? "📦"}
+                </button>
+                {pickerForIndex === index && (
+                  <div className="absolute left-0 top-11 z-50">
+                    <div className="rounded-xl overflow-hidden border border-gray-200 shadow-lg">
+                      <EmojiPicker
+                        theme={Theme.LIGHT}
+                        skinTonesDisabled
+                        searchDisabled={false}
+                        onEmojiClick={(emojiData: EmojiClickData) => {
+                          setEmojiFor(index, emojiData.emoji);
+                          setPickerForIndex(null);
+                        }}
+                        width={320}
+                        height={360}
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <span className="font-medium text-gray-800">{cat.name}</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   cat.type === "weekly"
-                    ? "bg-blue-500/15 text-blue-400"
-                    : "bg-purple-500/15 text-purple-400"
+                    ? "bg-blue-50 text-blue-600"
+                    : "bg-purple-50 text-purple-600"
                 }`}
               >
                 {cat.type}
@@ -82,7 +137,7 @@ export default function StepCategories({
             </div>
             <button
               onClick={() => removeCategory(index)}
-              className="text-slate-500 hover:text-red-400 text-lg transition-colors"
+              className="text-gray-400 hover:text-red-400 text-lg transition-colors"
             >
               &times;
             </button>
@@ -104,7 +159,7 @@ export default function StepCategories({
         <select
           value={newType}
           onChange={(e) => setNewType(e.target.value as CategoryType)}
-          className="rounded-xl border border-white/[0.15] bg-[#242442] px-3 py-2 text-slate-100 focus:border-emerald-500 focus:outline-none"
+          className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-gray-700 focus:border-[#22C55E] focus:outline-none"
         >
           <option value="monthly">Monthly</option>
           <option value="weekly">Weekly</option>

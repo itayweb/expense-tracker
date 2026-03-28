@@ -38,11 +38,11 @@ export default function MonthNavigator({ month, year, onNavigate }: MonthNavigat
     <div className="flex items-center justify-center gap-4">
       <button
         onClick={goPrev}
-        className="text-slate-400 hover:text-slate-100 px-2 py-1 text-lg transition-colors"
+        className="text-gray-400 hover:text-gray-700 px-2 py-1 text-lg transition-colors"
       >
         &larr;
       </button>
-      <span className="text-lg font-semibold text-slate-100 min-w-48 text-center">
+      <span className="text-base font-semibold text-gray-800 min-w-40 text-center">
         {monthNames[month - 1]} {year}
       </span>
       <button
@@ -50,8 +50,8 @@ export default function MonthNavigator({ month, year, onNavigate }: MonthNavigat
         disabled={isCurrentMonth}
         className={`px-2 py-1 text-lg transition-colors ${
           isCurrentMonth
-            ? "text-slate-600 cursor-not-allowed"
-            : "text-slate-400 hover:text-slate-100"
+            ? "text-gray-200 cursor-not-allowed"
+            : "text-gray-400 hover:text-gray-700"
         }`}
       >
         &rarr;

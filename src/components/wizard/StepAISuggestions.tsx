@@ -97,10 +97,8 @@ export default function StepAISuggestions({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-100">
-          Budget Allocation
-        </h2>
-        <p className="text-slate-400 mt-1">
+        <h2 className="text-2xl font-bold text-gray-900">Budget Allocation</h2>
+        <p className="text-gray-500 mt-1">
           {editMode
             ? "Adjust your category allocations as needed."
             : source === "ai"
@@ -113,13 +111,13 @@ export default function StepAISuggestions({
 
       {loading && (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
-          <span className="ml-3 text-slate-400">Asking AI for suggestions...</span>
+          <div className="animate-spin h-8 w-8 border-4 border-[#22C55E] border-t-transparent rounded-full" />
+          <span className="ml-3 text-gray-500">Asking AI for suggestions...</span>
         </div>
       )}
 
       {error && (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 text-amber-300 text-sm">
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-700 text-sm">
           {error}
         </div>
       )}
@@ -130,29 +128,29 @@ export default function StepAISuggestions({
             {regularBudgetCategories.map((cat, index) => (
               <div
                 key={index}
-                className="flex items-center gap-3 bg-[#242442] rounded-lg px-4 py-3"
+                className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 border border-gray-100"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-100">{cat.name}</span>
+                    <span className="font-medium text-gray-800">{cat.name}</span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${
                         cat.type === "weekly"
-                          ? "bg-blue-500/15 text-blue-400"
-                          : "bg-purple-500/15 text-purple-400"
+                          ? "bg-blue-50 text-blue-600"
+                          : "bg-purple-50 text-purple-600"
                       }`}
                     >
                       {cat.type}
                     </span>
                   </div>
                   {cat.type === "weekly" && (
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-gray-400">
                       ~{formatCurrency(Math.round(cat.budgetAmount * 4.33))}/month
                     </span>
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="text-slate-400">₪</span>
+                  <span className="text-gray-400">₪</span>
                   <input
                     type="number"
                     min={0}
@@ -161,9 +159,9 @@ export default function StepAISuggestions({
                     onChange={(e) =>
                       updateAmount(cat.id, cat.name, parseFloat(e.target.value) || 0)
                     }
-                    className="w-24 rounded-lg border border-white/[0.15] bg-[#2A2A4A] px-2 py-1 text-right text-slate-100 focus:border-emerald-500 focus:outline-none"
+                    className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1 text-right text-gray-800 focus:border-[#22C55E] focus:outline-none"
                   />
-                  <span className="text-xs text-slate-500 w-12">
+                  <span className="text-xs text-gray-400 w-12">
                     /{cat.type === "weekly" ? "week" : "mo"}
                   </span>
                 </div>
@@ -172,28 +170,24 @@ export default function StepAISuggestions({
           </div>
 
           <div
-            className={`rounded-lg p-4 ${
+            className={`rounded-xl p-4 ${
               remaining >= 0
-                ? "bg-emerald-500/10 border border-emerald-500/20"
-                : "bg-red-500/10 border border-red-500/20"
+                ? "bg-[#22C55E]/10 border border-[#22C55E]/20"
+                : "bg-red-50 border border-red-200"
             }`}
           >
             <div className="flex justify-between text-sm">
-              <span className="text-slate-400">Monthly Income</span>
-              <span className="font-medium text-slate-200">{formatCurrency(monthlyIncome)}</span>
+              <span className="text-gray-500">Monthly Income</span>
+              <span className="font-medium text-gray-800">{formatCurrency(monthlyIncome)}</span>
             </div>
             <div className="flex justify-between text-sm mt-1">
-              <span className="text-slate-400">Total Allocated</span>
-              <span className="font-medium text-slate-200">{formatCurrency(totalAllocated)}</span>
+              <span className="text-gray-500">Total Allocated</span>
+              <span className="font-medium text-gray-800">{formatCurrency(totalAllocated)}</span>
             </div>
-            <hr className="my-2 border-white/[0.1]" />
+            <hr className="my-2 border-gray-200" />
             <div className="flex justify-between">
-              <span className="font-medium text-slate-300">Remaining</span>
-              <span
-                className={`font-bold ${
-                  remaining >= 0 ? "text-emerald-400" : "text-red-400"
-                }`}
-              >
+              <span className="font-medium text-gray-700">Remaining</span>
+              <span className={`font-bold ${remaining >= 0 ? "text-[#22C55E]" : "text-red-500"}`}>
                 {formatCurrency(remaining)}
               </span>
             </div>

@@ -38,61 +38,42 @@ export default function TripSection({ onRefresh }: TripSectionProps) {
   const activeTrips = trips.filter((t) => t.status === "active");
   const completedTrips = trips.filter((t) => t.status === "completed");
 
-  if (trips.length === 0 && !showCreateModal) {
-    return (
-      <div className="mt-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-100">Trips</h2>
+  return (
+    <div className="mt-4">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4">
+        <div className="flex items-center justify-between py-3 border-b border-gray-50">
+          <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Trips</h2>
           <Button size="sm" onClick={() => setShowCreateModal(true)}>
             + New Trip
           </Button>
         </div>
-        <p className="text-sm text-slate-500 text-center py-4">
-          No trips yet. Create one to start tracking trip expenses.
-        </p>
-        <CreateTripModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onCreated={handleRefresh}
-        />
+
+        {trips.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center py-6">
+            No trips yet. Create one to track trip expenses.
+          </p>
+        ) : (
+          <div className="divide-y divide-gray-50">
+            {activeTrips.map((trip) => (
+              <TripCard key={trip.id} trip={trip} onRefresh={handleRefresh} />
+            ))}
+
+            {completedTrips.length > 0 && (
+              <>
+                <button
+                  onClick={() => setShowCompleted(!showCompleted)}
+                  className="w-full text-left text-xs text-gray-400 hover:text-gray-600 py-2.5 transition-colors"
+                >
+                  {showCompleted ? "▲ Hide" : "▼ Show"} {completedTrips.length} completed trip{completedTrips.length !== 1 ? "s" : ""}
+                </button>
+                {showCompleted && completedTrips.map((trip) => (
+                  <TripCard key={trip.id} trip={trip} onRefresh={handleRefresh} />
+                ))}
+              </>
+            )}
+          </div>
+        )}
       </div>
-    );
-  }
-
-  return (
-    <div className="mt-8">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-slate-100">Trips</h2>
-        <Button size="sm" onClick={() => setShowCreateModal(true)}>
-          + New Trip
-        </Button>
-      </div>
-
-      {activeTrips.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {activeTrips.map((trip) => (
-            <TripCard key={trip.id} trip={trip} onRefresh={handleRefresh} />
-          ))}
-        </div>
-      )}
-
-      {completedTrips.length > 0 && (
-        <div className="mt-4">
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className="text-sm text-slate-400 hover:text-slate-200 mb-3 transition-colors"
-          >
-            {showCompleted ? "Hide" : "Show"} completed trips ({completedTrips.length})
-          </button>
-          {showCompleted && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-75">
-              {completedTrips.map((trip) => (
-                <TripCard key={trip.id} trip={trip} onRefresh={handleRefresh} />
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
       <CreateTripModal
         isOpen={showCreateModal}

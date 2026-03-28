@@ -37,7 +37,7 @@ export default function DonutChart({
           cy="50"
           r={radius}
           fill="none"
-          stroke="rgba(255, 255, 255, 0.1)"
+          stroke="#E5E7EB"
           strokeWidth={strokeWidth}
         />
         {/* Progress ring */}
@@ -57,7 +57,7 @@ export default function DonutChart({
       </svg>
       {showLabel && (
         <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xs font-semibold text-slate-200">
+          <span className="text-xs font-semibold text-gray-600">
             {Math.round(percentage)}%
           </span>
         </div>

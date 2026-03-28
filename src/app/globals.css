@@ -1,24 +1,24 @@
 @import "tailwindcss";
+@import "@neondatabase/auth/ui/tailwind";
 
-/* Dark scrollbar */
+/* Light scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: #0F0F1A;
+  background: #F5F7FA;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.12);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(0, 0, 0, 0.2);
 }
 
-/* Smooth transitions for interactive elements */
 * {
-  scrollbar-color: rgba(255, 255, 255, 0.15) #0F0F1A;
+  scrollbar-color: rgba(0, 0, 0, 0.12) #F5F7FA;
 }
 
 /* Donut chart animation */

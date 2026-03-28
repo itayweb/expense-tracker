@@ -9,11 +9,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary:
-    "bg-gradient-to-r from-emerald-500 to-green-400 text-white hover:from-emerald-600 hover:to-green-500 shadow-lg shadow-emerald-500/25",
+    "bg-[#22C55E] text-white hover:bg-[#16A34A] shadow-sm shadow-green-200",
   secondary:
-    "bg-white/[0.08] text-slate-200 hover:bg-white/[0.12] border border-white/[0.1]",
+    "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200",
   danger:
-    "bg-red-500/20 text-red-400 hover:bg-red-500/30",
+    "bg-red-50 text-red-500 hover:bg-red-100 border border-red-100",
 };
 
 const sizeStyles = {
@@ -32,7 +32,7 @@ export default function Button({
 }: ButtonProps) {
   return (
     <button
-      className={`rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-[#0F0F1A] disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={`rounded-xl font-medium transition-all focus:outline-none focus:ring-2 focus:ring-[#22C55E] focus:ring-offset-2 focus:ring-offset-white disabled:opacity-50 disabled:cursor-not-allowed ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
       disabled={disabled}
       {...props}
     >

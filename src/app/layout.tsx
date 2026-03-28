@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { NeonAuthUIProvider } from "@neondatabase/auth/react";
+import { authClient } from "@/lib/auth/client";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,9 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="bg-[#0F0F1A] min-h-screen text-slate-100 antialiased">
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <body className="bg-[#F5F7FA] min-h-screen text-gray-900 antialiased">
+        <NeonAuthUIProvider authClient={authClient}>
+          {children}
+        </NeonAuthUIProvider>
       </body>
     </html>
   );

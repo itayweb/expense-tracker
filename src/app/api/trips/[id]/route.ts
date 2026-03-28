@@ -1,12 +1,26 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { getAuthedUserId } from "@/lib/auth/server";
 
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await getAuthedUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
   const body = await request.json();
+
+  const existing = await prisma.trip.findFirst({
+    where: { id: parseInt(id), userId },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   const trip = await prisma.trip.update({
     where: { id: parseInt(id) },
@@ -26,10 +40,23 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const userId = await getAuthedUserId();
+  if (!userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await params;
+
+  const existing = await prisma.trip.findFirst({
+    where: { id: parseInt(id), userId },
+    select: { id: true },
+  });
+  if (!existing) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
 
   await prisma.trip.delete({
     where: { id: parseInt(id) },

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Button from "@/components/ui/Button";
 import { WizardCategoryWithBudget } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { invalidateBudgetCache } from "@/lib/budgetCache";
 
 interface StepReviewProps {
   monthlyIncome: number;
@@ -46,6 +47,7 @@ export default function StepReview({
             categories: categories.map((cat) => ({
               ...(cat.id ? { id: cat.id } : {}),
               name: cat.name,
+              emoji: cat.emoji,
               type: cat.type,
               budgetAmount: cat.budgetAmount,
             })),
@@ -63,12 +65,14 @@ export default function StepReview({
             year: now.getFullYear(),
             categories: categories.map((cat) => ({
               name: cat.name,
+              emoji: cat.emoji,
               type: cat.type,
               budgetAmount: cat.budgetAmount,
             })),
           }),
         });
       }
+      invalidateBudgetCache();
       router.push("/");
     } catch (error) {
       console.error("Failed to save budget:", error);
@@ -79,17 +83,17 @@ export default function StepReview({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-100">Review Your Budget</h2>
-        <p className="text-slate-400 mt-1">
+        <h2 className="text-2xl font-bold text-gray-900">Review Your Budget</h2>
+        <p className="text-gray-500 mt-1">
           {editMode
             ? "Review your changes and save."
             : "Everything look good? Save to start tracking your expenses."}
         </p>
       </div>
 
-      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-4">
-        <p className="text-sm text-emerald-400">Monthly Income</p>
-        <p className="text-3xl font-bold text-emerald-300">
+      <div className="bg-[#22C55E]/10 border border-[#22C55E]/20 rounded-xl p-4">
+        <p className="text-sm text-[#22C55E]">Monthly Income</p>
+        <p className="text-3xl font-bold text-[#22C55E]">
           {formatCurrency(monthlyIncome)}
         </p>
       </div>
@@ -98,34 +102,30 @@ export default function StepReview({
         {regularCategories.map((cat, index) => (
           <div
             key={index}
-            className="flex items-center justify-between bg-[#242442] rounded-lg px-4 py-3"
+            className="flex items-center justify-between bg-gray-50 rounded-xl px-4 py-3 border border-gray-100"
           >
             <div className="flex items-center gap-2">
-              <span className="font-medium text-slate-100">{cat.name}</span>
+              <span className="font-medium text-gray-800">{cat.emoji ?? ""} {cat.name}</span>
               <span
                 className={`text-xs px-2 py-0.5 rounded-full ${
                   cat.type === "weekly"
-                    ? "bg-blue-500/15 text-blue-400"
-                    : "bg-purple-500/15 text-purple-400"
+                    ? "bg-blue-50 text-blue-600"
+                    : "bg-purple-50 text-purple-600"
                 }`}
               >
                 {cat.type}
               </span>
             </div>
-            <span className="font-semibold text-slate-100">
+            <span className="font-semibold text-gray-800">
               {formatCurrency(cat.budgetAmount)}{cat.type === "weekly" ? "/week" : "/mo"}
             </span>
           </div>
         ))}
       </div>
 
-      <div className="flex justify-between items-center bg-white/[0.05] rounded-lg px-4 py-3">
-        <span className="font-medium text-slate-300">Unallocated</span>
-        <span
-          className={`font-bold ${
-            remaining >= 0 ? "text-emerald-400" : "text-red-400"
-          }`}
-        >
+      <div className="flex justify-between items-center bg-gray-50 border border-gray-100 rounded-xl px-4 py-3">
+        <span className="font-medium text-gray-600">Unallocated</span>
+        <span className={`font-bold ${remaining >= 0 ? "text-[#22C55E]" : "text-red-500"}`}>
           {formatCurrency(remaining)}
         </span>
       </div>

@@ -3,6 +3,7 @@ export type CategoryType = "weekly" | "monthly";
 export interface WizardCategory {
   name: string;
   type: CategoryType;
+  emoji?: string;
 }
 
 export interface WizardCategoryWithBudget extends WizardCategory {
@@ -62,6 +63,7 @@ export interface WeeklyInfoData {
 export interface CategoryWithExpenses {
   id: number;
   name: string;
+  emoji?: string;
   type: string;
   budgetAmount: number;
   budgetId: number;

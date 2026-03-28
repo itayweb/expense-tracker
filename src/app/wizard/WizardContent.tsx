@@ -27,8 +27,8 @@ export default function WizardContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin h-8 w-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
+      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA]">
+        <div className="animate-spin h-8 w-8 border-4 border-[#22C55E] border-t-transparent rounded-full" />
       </div>
     );
   }
