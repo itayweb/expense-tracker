@@ -5,6 +5,7 @@ import StepIncome from "./StepIncome";
 import StepCategories from "./StepCategories";
 import StepAISuggestions from "./StepAISuggestions";
 import StepReview from "./StepReview";
+import Header from "@/components/layout/Header";
 import { WizardCategory, WizardCategoryWithBudget, BudgetWithCategories } from "@/lib/types";
 
 interface WizardContainerProps {
@@ -117,13 +118,16 @@ export default function WizardContainer({
   };
 
   return (
-    <div className="min-h-screen bg-[#0F0F1A] flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-100">
-            {isEdit ? "Edit Budget" : "Budget Wizard"}
+    <div className="min-h-screen bg-[#F5F7FA]">
+      <Header />
+
+      <main className="max-w-2xl mx-auto px-4 py-4 pb-8 space-y-3">
+        {/* Title */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-4">
+          <h1 className="text-lg font-bold text-gray-900">
+            {isEdit ? "Edit Budget" : "Budget Setup"}
           </h1>
-          <p className="text-slate-400 mt-1">
+          <p className="text-sm text-gray-400 mt-0.5">
             {isEdit
               ? "Adjust your income, categories, and allocations"
               : "Set up your monthly budget in a few simple steps"}
@@ -131,40 +135,43 @@ export default function WizardContainer({
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          {STEPS.map((label, index) => (
-            <div key={label} className="flex items-center gap-2">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${
-                  index <= step
-                    ? "bg-gradient-to-r from-emerald-500 to-green-400 text-white"
-                    : "bg-white/[0.08] text-slate-500"
-                }`}
-              >
-                {index + 1}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-5 py-3">
+          <div className="flex items-center gap-1">
+            {STEPS.map((label, index) => (
+              <div key={label} className="flex items-center gap-1 flex-1 last:flex-none">
+                <div className="flex items-center gap-2">
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${
+                      index < step
+                        ? "bg-[#22C55E] text-white"
+                        : index === step
+                        ? "bg-[#22C55E] text-white ring-4 ring-[#22C55E]/20"
+                        : "bg-gray-100 text-gray-400"
+                    }`}
+                  >
+                    {index < step ? "✓" : index + 1}
+                  </div>
+                  <span
+                    className={`text-xs hidden sm:inline ${
+                      index === step ? "text-[#22C55E] font-semibold" : "text-gray-400"
+                    }`}
+                  >
+                    {label}
+                  </span>
+                </div>
+                {index < STEPS.length - 1 && (
+                  <div className={`h-0.5 flex-1 mx-1 ${index < step ? "bg-[#22C55E]" : "bg-gray-100"}`} />
+                )}
               </div>
-              <span
-                className={`text-sm hidden sm:inline ${
-                  index <= step ? "text-emerald-400 font-medium" : "text-slate-500"
-                }`}
-              >
-                {label}
-              </span>
-              {index < STEPS.length - 1 && (
-                <div
-                  className={`w-8 h-0.5 ${
-                    index < step ? "bg-emerald-500" : "bg-white/[0.1]"
-                  }`}
-                />
-              )}
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
-        <div className="bg-[#1A1A2E] rounded-2xl shadow-lg shadow-black/20 border border-white/[0.08] p-8">
+        {/* Step content */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 px-5 py-6">
           {renderStep()}
         </div>
-      </div>
+      </main>
     </div>
   );
 }

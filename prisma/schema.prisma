@@ -65,15 +65,3 @@ model Trip {
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
 }
-
-/// Maps Neon Auth user id to app username (Neon Auth still uses email+password under the hood).
-model UserProfile {
-  id          String   @id @default(cuid())
-  authUserId  String   @unique
-  username    String   @unique
-  displayName String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([username])
-}

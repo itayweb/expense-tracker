@@ -7,6 +7,12 @@ import WeekNavigator from "@/components/history/WeekNavigator";
 import { formatCurrency, getCategoryColor } from "@/lib/utils";
 import { ExpenseItem } from "@/lib/types";
 import ExpenseList from "@/components/dashboard/ExpenseList";
+import {
+  getHistoryCacheKey,
+  getCachedHistory,
+  isHistoryCacheFresh,
+  setCachedHistory,
+} from "@/lib/historyCache";
 
 interface HistoryCategory {
   id: number;
@@ -85,11 +91,25 @@ export default function HistoryPage() {
   const [year, setYear] = useState(now.getFullYear());
   const [weekNumber, setWeekNumber] = useState<number | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
-  const [data, setData] = useState<HistoryData | null>(null);
-  const [loading, setLoading] = useState(true);
 
-  const fetchHistory = useCallback(async () => {
-    setLoading(true);
+  const initialKey = getHistoryCacheKey(now.getMonth() + 1, now.getFullYear(), null, null);
+  const [data, setData] = useState<HistoryData | null>(
+    () => getCachedHistory(initialKey) as HistoryData | null
+  );
+  const [loading, setLoading] = useState(!getCachedHistory(initialKey));
+
+  const fetchHistory = useCallback(async (force = false) => {
+    const key = getHistoryCacheKey(month, year, weekNumber, categoryFilter);
+    const cached = getCachedHistory(key) as HistoryData | null;
+    if (!force && isHistoryCacheFresh(key)) {
+      setData(cached);
+      setLoading(false);
+      return;
+    }
+    // Show cached data immediately while refetching in background
+    if (cached) setData(cached);
+    else setLoading(true);
+
     try {
       const params = new URLSearchParams({
         month: String(month),
@@ -99,7 +119,9 @@ export default function HistoryPage() {
       if (categoryFilter !== null) params.set("categoryId", String(categoryFilter));
 
       const res = await fetch(`/api/history?${params}`);
+      if (!res.ok) return;
       const result = await res.json();
+      setCachedHistory(key, result);
       setData(result);
     } catch (error) {
       console.error("Failed to fetch history:", error);
@@ -259,7 +281,7 @@ export default function HistoryPage() {
                           </span>
                         </div>
                       </div>
-                      <ExpenseList expenses={cat.expenses} onRefresh={fetchHistory} showDelete={false} />
+                      <ExpenseList expenses={cat.expenses} onRefresh={() => fetchHistory(true)} showDelete={false} />
                     </div>
                   );
                 })}

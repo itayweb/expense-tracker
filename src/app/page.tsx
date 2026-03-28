@@ -8,25 +8,28 @@ import CategoryGrid from "@/components/dashboard/CategoryGrid";
 import TripSection from "@/components/dashboard/TripSection";
 import AddExpenseModal from "@/components/dashboard/AddExpenseModal";
 import { BudgetWithCategories } from "@/lib/types";
+import { getCachedBudget, isBudgetCacheFresh, setCachedBudget } from "@/lib/budgetCache";
 
 export default function DashboardPage() {
   const router = useRouter();
-  const [budget, setBudget] = useState<BudgetWithCategories | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [budget, setBudget] = useState<BudgetWithCategories | null>(() => getCachedBudget());
+  const [loading, setLoading] = useState(!getCachedBudget());
   const [showAddExpenseModal, setShowAddExpenseModal] = useState(false);
 
   const fetchBudget = useCallback(async () => {
     try {
       const res = await fetch("/api/budget");
-      if (!res.ok) {
-        console.error("Budget API error:", res.status);
+      if (res.status === 401) {
+        router.push("/auth/sign-in");
         return;
       }
+      if (!res.ok) return;
       const data = await res.json();
       if (!data || data.error) {
         router.push("/wizard");
         return;
       }
+      setCachedBudget(data);
       setBudget(data);
     } catch (error) {
       console.error("Failed to fetch budget:", error);
@@ -36,6 +39,8 @@ export default function DashboardPage() {
   }, [router]);
 
   useEffect(() => {
+    // Skip network call if cache is fresh (e.g. navigating back within 30s)
+    if (isBudgetCacheFresh()) return;
     fetchBudget();
   }, [fetchBudget]);
 
