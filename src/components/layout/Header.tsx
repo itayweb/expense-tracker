@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { authClient } from "@/lib/auth/client";
+import { useUser, useClerk } from "@clerk/nextjs";
 
 interface HeaderProps {
   currentTab?: "dashboard" | "history";
@@ -17,13 +17,14 @@ const monthNames = [
 
 export default function Header({ currentTab, budgetMonth, budgetYear }: HeaderProps) {
   const router = useRouter();
-  const { data } = authClient.useSession();
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
   const now = new Date();
   const dayName = now.toLocaleDateString("en-US", { weekday: "short" });
   const dayNum = now.getDate();
   const monthShort = now.toLocaleDateString("en-US", { month: "short" });
-  const username = data?.user?.name ?? data?.user?.email ?? null;
+  const username = user?.fullName ?? user?.primaryEmailAddress?.emailAddress ?? null;
   const avatarInitial = (username?.[0] ?? "?").toUpperCase();
 
   return (
@@ -60,8 +61,8 @@ export default function Header({ currentTab, budgetMonth, budgetYear }: HeaderPr
             className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors font-semibold"
             title={username ?? "Account"}
             onClick={async () => {
-              if (data?.session) {
-                await authClient.signOut();
+              if (user) {
+                await signOut();
               }
               router.push("/auth/sign-in");
             }}

@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "@neondatabase/auth/ui/tailwind";
 
 /* Light scrollbar */
 ::-webkit-scrollbar {
