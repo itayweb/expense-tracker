@@ -3,13 +3,83 @@
 import { useState } from "react";
 import { authClient } from "@/lib/auth/client";
 
+// Constants from @neondatabase/auth (dist/constants-2bpp2_-f.mjs)
+const POPUP_CALLBACK_ROUTE = "/auth/callback";
+const POPUP_PARAM_NAME = "neon_popup";
+const POPUP_CALLBACK_PARAM_NAME = "neon_popup_callback";
+const SESSION_VERIFIER_PARAM_NAME = "neon_auth_session_verifier";
+const POPUP_MESSAGE_TYPE = "neon-auth:oauth-complete";
+
 export default function GoogleSignInButton() {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
     setLoading(true);
-    await authClient.signIn.social({ provider: "google", callbackURL: "/" });
-    setLoading(false);
+    try {
+      const callbackURL = "/";
+
+      // Build the popup callback URL that NeonAuthUIProvider will detect
+      const popupCallbackUrl = new URL(POPUP_CALLBACK_ROUTE, window.location.origin);
+      popupCallbackUrl.searchParams.set(POPUP_PARAM_NAME, "1");
+      popupCallbackUrl.searchParams.set(POPUP_CALLBACK_PARAM_NAME, callbackURL);
+
+      // disableRedirect: true switches state storage from cookie → server-side,
+      // which fixes Safari ITP blocking the cross-site OAuth state cookie.
+      const result = await authClient.signIn.social({
+        provider: "google",
+        callbackURL: popupCallbackUrl.toString(),
+        disableRedirect: true,
+      });
+
+      const oauthUrl = (result.data as { url?: string } | null)?.url;
+      if (!oauthUrl) throw new Error("No OAuth URL returned");
+
+      // Open the OAuth flow in a popup window
+      const popup = window.open(oauthUrl, "neon_oauth", "width=500,height=600,left=200,top=100");
+
+      if (!popup) {
+        // Popup blocked (e.g. desktop browser setting) — fall back to redirect
+        window.location.href = oauthUrl;
+        return;
+      }
+
+      // Wait for the popup to post the session verifier back
+      const verifier = await new Promise<string>((resolve, reject) => {
+        const onMessage = (e: MessageEvent) => {
+          if (e.origin !== window.location.origin) return;
+          if (e.data?.type === POPUP_MESSAGE_TYPE && e.data?.verifier) {
+            window.removeEventListener("message", onMessage);
+            clearInterval(closedPoll);
+            resolve(e.data.verifier);
+          }
+        };
+        window.addEventListener("message", onMessage);
+
+        // Reject if the user closes the popup without completing OAuth
+        const closedPoll = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(closedPoll);
+            window.removeEventListener("message", onMessage);
+            reject(new Error("Popup closed before completing sign-in"));
+          }
+        }, 500);
+
+        // Safety timeout (5 min)
+        setTimeout(() => {
+          clearInterval(closedPoll);
+          window.removeEventListener("message", onMessage);
+          reject(new Error("OAuth timed out"));
+        }, 5 * 60 * 1000);
+      });
+
+      // Navigate to the app with the verifier; neonAuthMiddleware exchanges it for a session
+      const navUrl = new URL(callbackURL, window.location.origin);
+      navUrl.searchParams.set(SESSION_VERIFIER_PARAM_NAME, verifier);
+      window.location.href = navUrl.toString();
+    } catch (err) {
+      console.error("Sign-in error:", err);
+      setLoading(false);
+    }
   };
 
   return (
