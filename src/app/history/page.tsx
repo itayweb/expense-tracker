@@ -37,50 +37,91 @@ interface HistoryData {
   weeks: WeekBoundary[];
 }
 
-function SpendingBarChart({ categories }: { categories: HistoryCategory[] }) {
-  const visible = categories.filter((c) => !c.isSystem && c.totalSpent > 0).slice(0, 6);
+function SpendingBarChart({
+  categories,
+  activeCategoryId,
+  onCategoryClick,
+}: {
+  categories: HistoryCategory[];
+  activeCategoryId: number | null;
+  onCategoryClick: (id: number | null) => void;
+}) {
+  const [animated, setAnimated] = useState(false);
+  useEffect(() => { setAnimated(true); }, []);
+
+  const visible = categories
+    .filter((c) => !c.isSystem && c.totalSpent > 0)
+    .sort((a, b) => b.totalSpent - a.totalSpent)
+    .slice(0, 8);
+
   if (visible.length === 0) return null;
   const max = Math.max(...visible.map((c) => Math.max(c.totalSpent, c.budgetAmount)));
 
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-3">
-      <div className="flex items-center gap-4 mb-4">
+      <div className="flex items-center gap-4 mb-3">
         <p className="text-sm font-semibold text-gray-700">Spending by Category</p>
         <div className="flex items-center gap-3 ml-auto">
           <span className="flex items-center gap-1 text-xs text-gray-400">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[#22C55E] opacity-40 inline-block" /> Budget
+            <span className="w-4 h-1.5 rounded-full bg-[#22C55E] opacity-40 inline-block" /> Budget
           </span>
           <span className="flex items-center gap-1 text-xs text-gray-400">
-            <span className="w-2.5 h-2.5 rounded-sm bg-amber-400 inline-block" /> Spent
+            <span className="w-4 h-2 rounded-full bg-amber-400 inline-block" /> Spent
           </span>
         </div>
       </div>
-      <div className="flex items-end justify-around gap-2 h-28">
+      <div className="flex flex-col gap-1">
         {visible.map((cat) => {
-          const budgetH = max > 0 ? (cat.budgetAmount / max) * 100 : 0;
-          const spentH = max > 0 ? (cat.totalSpent / max) * 100 : 0;
+          const budgetW = max > 0 ? (cat.budgetAmount / max) * 100 : 0;
+          const spentW = max > 0 ? Math.min((cat.totalSpent / max) * 100, 100) : 0;
           const over = cat.totalSpent > cat.budgetAmount;
+          const pct = cat.budgetAmount > 0 ? Math.round((cat.totalSpent / cat.budgetAmount) * 100) : null;
+          const isActive = activeCategoryId === cat.id;
           return (
-            <div key={cat.id} className="flex flex-col items-center gap-1 flex-1">
-              <div className="flex items-end gap-0.5 w-full justify-center" style={{ height: "88px" }}>
+            <button
+              key={cat.id}
+              onClick={() => onCategoryClick(isActive ? null : cat.id)}
+              className={`flex items-center gap-3 w-full rounded-xl px-2 py-2 transition-colors text-left ${
+                isActive ? "bg-green-50 ring-1 ring-[#22C55E]/30" : "hover:bg-gray-50"
+              }`}
+            >
+              {/* Label */}
+              <div className="w-24 flex items-center gap-1.5 flex-shrink-0">
+                {cat.emoji && <span className="text-base leading-none">{cat.emoji}</span>}
+                <span className="text-xs font-medium text-gray-700 truncate">{cat.name}</span>
+              </div>
+              {/* Bar zone */}
+              <div className="flex-1 relative h-3 rounded-full overflow-hidden bg-gray-100">
                 <div
-                  className="w-3 rounded-t-sm bg-[#22C55E] opacity-40 transition-all"
-                  style={{ height: `${budgetH}%` }}
-                  title={`Budget: ${formatCurrency(cat.budgetAmount)}`}
+                  className="absolute top-0 left-0 h-full rounded-full bg-[#22C55E] opacity-30 transition-[width] duration-500"
+                  style={{ width: animated ? `${budgetW}%` : "0%" }}
                 />
                 <div
-                  className={`w-3 rounded-t-sm transition-all ${over ? "bg-red-400" : "bg-amber-400"}`}
-                  style={{ height: `${spentH}%` }}
-                  title={`Spent: ${formatCurrency(cat.totalSpent)}`}
+                  className={`absolute top-0 left-0 h-full rounded-full transition-[width] duration-500 ${over ? "bg-red-400" : "bg-amber-400"}`}
+                  style={{ width: animated ? `${spentW}%` : "0%" }}
                 />
               </div>
-              <p className="text-[9px] text-gray-400 text-center leading-tight truncate w-full px-0.5">
-                {cat.name.split(" ")[0]}
-              </p>
-            </div>
+              {/* Value */}
+              <div className="w-20 flex-shrink-0 text-right">
+                <span className={`text-xs font-semibold ${over ? "text-red-500" : "text-gray-700"}`}>
+                  {formatCurrency(cat.totalSpent)}
+                </span>
+                {pct !== null && (
+                  <span className="text-[10px] text-gray-400 block">{pct}%</span>
+                )}
+              </div>
+            </button>
           );
         })}
       </div>
+      {activeCategoryId && (
+        <button
+          onClick={() => onCategoryClick(null)}
+          className="mt-2 text-xs text-[#22C55E] font-medium flex items-center gap-1 hover:underline"
+        >
+          <span>×</span> Clear filter
+        </button>
+      )}
     </div>
   );
 }
@@ -204,7 +245,11 @@ export default function HistoryPage() {
             </div>
 
             {/* Bar chart */}
-            {!categoryFilter && <SpendingBarChart categories={data.categories} />}
+            <SpendingBarChart
+              categories={data.categories}
+              activeCategoryId={categoryFilter}
+              onCategoryClick={setCategoryFilter}
+            />
 
             {/* Donut + total */}
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex items-center gap-5">
