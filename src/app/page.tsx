@@ -46,7 +46,7 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F5F7FA]">
+      <div className="flex-1 flex items-center justify-center bg-[#F5F7FA]">
         <div className="animate-spin h-8 w-8 border-4 border-[#22C55E] border-t-transparent rounded-full" />
       </div>
     );
@@ -77,7 +77,7 @@ export default function DashboardPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className="bg-[#F5F7FA]">
       <Header
         currentTab="dashboard"
         budgetMonth={budget.month}
