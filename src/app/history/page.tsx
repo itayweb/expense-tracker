@@ -145,7 +145,7 @@ export default function HistoryPage() {
   const totalIncome = data?.budget?.monthlyIncome ?? 0;
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className="bg-[#F5F7FA]">
       <Header
         currentTab="history"
         budgetMonth={data?.budget?.month}

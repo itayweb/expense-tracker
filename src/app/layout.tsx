@@ -20,8 +20,10 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en" suppressHydrationWarning>
-        <body className="bg-[#F5F7FA] min-h-screen text-gray-900 antialiased">
-          {children}
+        <body className="bg-[#F5F7FA] min-h-screen flex flex-col text-gray-900 antialiased">
+          <div className="flex-1 flex flex-col">
+            {children}
+          </div>
           <Footer />
         </body>
       </html>

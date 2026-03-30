@@ -118,7 +118,7 @@ export default function WizardContainer({
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className="bg-[#F5F7FA]">
       <Header />
 
       <main className="max-w-2xl mx-auto px-4 py-4 pb-8 space-y-3">
