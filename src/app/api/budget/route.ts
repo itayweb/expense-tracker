@@ -12,8 +12,13 @@ export async function GET(request: NextRequest) {
     }
 
     const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const searchParams = request.nextUrl.searchParams;
+    const month = parseInt(searchParams.get("month") ?? String(currentMonth));
+    const year = parseInt(searchParams.get("year") ?? String(currentYear));
+    const isCurrentMonth = month === currentMonth && year === currentYear;
 
     const budget = await prisma.budget.findUnique({
       where: { userId_month_year: { userId, month, year } },
@@ -33,22 +38,25 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(null);
     }
 
-    // Generate any pending recurring expense entries
+    // Only run side effects for the current month (not for historical month fetches)
     let generated = 0;
-    try {
-      generated = await generateRecurringExpenses(budget.id, month, year);
-    } catch (err) {
-      console.error("Recurring generation error (non-fatal):", err);
-    }
-
-    // Ensure Trips system category exists (lazy creation for existing budgets)
-    const hasTripsCategory = budget.categories.some((c) => c.isSystem);
     let tripsCreated = false;
-    if (!hasTripsCategory) {
-      await prisma.category.create({
-        data: { name: "Trips", type: "monthly", budgetAmount: 0, isSystem: true, budgetId: budget.id },
-      });
-      tripsCreated = true;
+    if (isCurrentMonth) {
+      // Generate any pending recurring expense entries
+      try {
+        generated = await generateRecurringExpenses(budget.id, month, year);
+      } catch (err) {
+        console.error("Recurring generation error (non-fatal):", err);
+      }
+
+      // Ensure Trips system category exists (lazy creation for existing budgets)
+      const hasTripsCategory = budget.categories.some((c) => c.isSystem);
+      if (!hasTripsCategory) {
+        await prisma.category.create({
+          data: { name: "Trips", type: "monthly", budgetAmount: 0, isSystem: true, budgetId: budget.id },
+        });
+        tripsCreated = true;
+      }
     }
 
     // Only re-fetch if new data was created; otherwise reuse the already-loaded budget
