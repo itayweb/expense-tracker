@@ -57,6 +57,44 @@ export async function GET(request: NextRequest) {
         });
         tripsCreated = true;
       }
+
+      // Lazily seed recurring expense templates from previous month if none exist yet
+      const hasRecurringTemplates = budget.categories
+        .flatMap((c) => c.expenses)
+        .some((e) => e.recurring);
+
+      if (!hasRecurringTemplates) {
+        const prevMonth = month === 1 ? 12 : month - 1;
+        const prevYear = month === 1 ? year - 1 : year;
+        const prevBudget = await prisma.budget.findUnique({
+          where: { userId_month_year: { userId, month: prevMonth, year: prevYear } },
+          include: { categories: { include: { expenses: { where: { recurring: true } } } } },
+        });
+
+        if (prevBudget) {
+          const newCatMap = new Map(budget.categories.map((c) => [c.name.toLowerCase(), c.id]));
+          const toSeed = prevBudget.categories.flatMap((pc) =>
+            pc.expenses
+              .map((e) => {
+                const newCatId = newCatMap.get(pc.name.toLowerCase());
+                if (!newCatId) return null;
+                return {
+                  amount: e.amount,
+                  description: e.description,
+                  date: e.date,
+                  categoryId: newCatId,
+                  recurring: true as const,
+                  recurringInterval: e.recurringInterval,
+                };
+              })
+              .filter((x): x is NonNullable<typeof x> => x !== null)
+          );
+          if (toSeed.length > 0) {
+            await prisma.expense.createMany({ data: toSeed });
+            tripsCreated = true; // reuse flag to trigger re-fetch + generateRecurringExpenses
+          }
+        }
+      }
     }
 
     // Only re-fetch if new data was created; otherwise reuse the already-loaded budget
