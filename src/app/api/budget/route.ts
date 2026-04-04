@@ -171,6 +171,56 @@ export async function POST(request: NextRequest) {
     });
   });
 
+  // Carry over recurring expense templates from the previous month
+  const prevMonth = month === 1 ? 12 : month - 1;
+  const prevYear = month === 1 ? year - 1 : year;
+  const previousBudget = await prisma.budget.findUnique({
+    where: { userId_month_year: { userId, month: prevMonth, year: prevYear } },
+    include: {
+      categories: {
+        include: {
+          expenses: { where: { recurring: true } },
+        },
+      },
+    },
+  });
+
+  if (previousBudget) {
+    // Map new category names (lowercase) → new category id
+    const newCategoryMap = new Map(
+      budget.categories.map((c) => [c.name.toLowerCase(), c.id])
+    );
+
+    const recurringToSeed: {
+      amount: number;
+      description: string;
+      date: Date;
+      categoryId: number;
+      recurring: true;
+      recurringInterval: string | null;
+    }[] = [];
+
+    for (const prevCat of previousBudget.categories) {
+      if (prevCat.expenses.length === 0) continue;
+      const newCatId = newCategoryMap.get(prevCat.name.toLowerCase());
+      if (!newCatId) continue;
+      for (const exp of prevCat.expenses) {
+        recurringToSeed.push({
+          amount: exp.amount,
+          description: exp.description,
+          date: exp.date, // keep original date (in prev month) so generateRecurringExpenses fires
+          categoryId: newCatId,
+          recurring: true,
+          recurringInterval: exp.recurringInterval,
+        });
+      }
+    }
+
+    if (recurringToSeed.length > 0) {
+      await prisma.expense.createMany({ data: recurringToSeed });
+    }
+  }
+
   return NextResponse.json(budget, { status: 201 });
 }
 
