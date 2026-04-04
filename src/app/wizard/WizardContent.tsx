@@ -5,22 +5,36 @@ import { useSearchParams } from "next/navigation";
 import WizardContainer from "@/components/wizard/WizardContainer";
 import { BudgetWithCategories } from "@/lib/types";
 
+function getPreviousMonth(month: number, year: number) {
+  return month === 1 ? { month: 12, year: year - 1 } : { month: month - 1, year };
+}
+
 export default function WizardContent() {
   const searchParams = useSearchParams();
   const mode = searchParams.get("mode") === "edit" ? "edit" : "create";
   const [existingBudget, setExistingBudget] = useState<BudgetWithCategories | null>(null);
-  const [loading, setLoading] = useState(mode === "edit");
+  const [previousBudget, setPreviousBudget] = useState<BudgetWithCategories | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (mode === "edit") {
-      fetch("/api/budget")
+    const now = new Date();
+    const currentMonth = now.getMonth() + 1;
+    const currentYear = now.getFullYear();
+
+    const fetchBudget = (month: number, year: number) =>
+      fetch(`/api/budget?month=${month}&year=${year}`)
         .then((res) => res.json())
-        .then((data) => {
-          if (data && !data.error) {
-            setExistingBudget(data);
-          }
-        })
-        .catch(console.error)
+        .then((data: BudgetWithCategories | null) => (data && !("error" in data) ? data : null))
+        .catch(() => null);
+
+    if (mode === "edit") {
+      fetchBudget(currentMonth, currentYear)
+        .then(setExistingBudget)
+        .finally(() => setLoading(false));
+    } else {
+      const prev = getPreviousMonth(currentMonth, currentYear);
+      fetchBudget(prev.month, prev.year)
+        .then(setPreviousBudget)
         .finally(() => setLoading(false));
     }
   }, [mode]);
@@ -33,5 +47,11 @@ export default function WizardContent() {
     );
   }
 
-  return <WizardContainer mode={mode} existingBudget={existingBudget} />;
+  return (
+    <WizardContainer
+      mode={mode}
+      existingBudget={existingBudget}
+      previousBudget={previousBudget}
+    />
+  );
 }

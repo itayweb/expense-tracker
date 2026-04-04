@@ -13,6 +13,7 @@ interface StepAISuggestionsProps {
   onNext: () => void;
   onBack: () => void;
   editMode?: boolean;
+  autoFetch?: boolean;
 }
 
 export default function StepAISuggestions({
@@ -23,6 +24,7 @@ export default function StepAISuggestions({
   onNext,
   onBack,
   editMode = false,
+  autoFetch = false,
 }: StepAISuggestionsProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +76,7 @@ export default function StepAISuggestions({
   }, [monthlyIncome, categories, onChange]);
 
   useEffect(() => {
-    if (!editMode && budgetCategories.length === 0) {
+    if (autoFetch || (!editMode && budgetCategories.length === 0)) {
       fetchSuggestions();
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
