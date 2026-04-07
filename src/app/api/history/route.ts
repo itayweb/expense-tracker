@@ -18,10 +18,12 @@ export async function GET(request: NextRequest) {
   const budget = await prisma.budget.findUnique({
     where: { userId_month_year: { userId, month, year } },
     include: {
-      categories: {
+      budgetCategories: {
         include: {
-          expenses: {
-            orderBy: { date: "desc" },
+          category: {
+            include: {
+              expenses: { orderBy: { date: "desc" } },
+            },
           },
         },
       },
@@ -38,16 +40,14 @@ export async function GET(request: NextRequest) {
     end: w.end.toISOString(),
   }));
 
-  let categories = budget.categories;
+  let budgetCategories = budget.budgetCategories;
 
-  // Filter by category if specified
   if (categoryId) {
-    categories = categories.filter((c) => c.id === categoryId);
+    budgetCategories = budgetCategories.filter((bc) => bc.category.id === categoryId);
   }
 
-  // Filter expenses by week if specified
-  const result = categories.map((cat) => {
-    let expenses = cat.expenses;
+  const result = budgetCategories.map((bc) => {
+    let expenses = bc.category.expenses;
 
     if (weekNumber !== null) {
       const week = weeks.find((w) => w.weekNumber === weekNumber);
@@ -62,12 +62,12 @@ export async function GET(request: NextRequest) {
     }
 
     return {
-      id: cat.id,
-      name: cat.name,
-      emoji: cat.emoji,
-      type: cat.type,
-      budgetAmount: cat.budgetAmount,
-      isSystem: cat.isSystem,
+      id: bc.category.id,
+      name: bc.category.name,
+      emoji: bc.category.emoji,
+      type: bc.category.type,
+      budgetAmount: bc.budgetAmount,
+      isSystem: bc.category.isSystem,
       expenses,
       totalSpent: expenses.reduce((sum, exp) => sum + exp.amount, 0),
     };

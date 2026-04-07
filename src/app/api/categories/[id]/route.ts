@@ -15,7 +15,7 @@ export async function PUT(
   const body = await request.json();
 
   const existing = await prisma.category.findFirst({
-    where: { id: parseInt(id), budget: { userId } },
+    where: { id: parseInt(id), userId },
     select: { id: true },
   });
   if (!existing) {
@@ -28,9 +28,16 @@ export async function PUT(
       name: body.name,
       ...(body.emoji !== undefined && { emoji: body.emoji }),
       type: body.type,
-      budgetAmount: body.budgetAmount,
     },
   });
+
+  // Update budgetAmount in the specific budget if budgetId is provided
+  if (body.budgetId !== undefined && body.budgetAmount !== undefined) {
+    await prisma.budgetCategory.updateMany({
+      where: { budgetId: body.budgetId, categoryId: parseInt(id) },
+      data: { budgetAmount: body.budgetAmount },
+    });
+  }
 
   return NextResponse.json(category);
 }
@@ -47,16 +54,13 @@ export async function DELETE(
   const { id } = await params;
 
   const existing = await prisma.category.findFirst({
-    where: { id: parseInt(id), budget: { userId } },
+    where: { id: parseInt(id), userId, isSystem: false },
     select: { id: true },
   });
   if (!existing) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  await prisma.category.delete({
-    where: { id: parseInt(id) },
-  });
-
+  await prisma.category.delete({ where: { id: parseInt(id) } });
   return NextResponse.json({ success: true });
 }

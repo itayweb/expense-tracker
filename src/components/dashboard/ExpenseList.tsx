@@ -10,6 +10,12 @@ interface ExpenseListProps {
   showDelete?: boolean;
 }
 
+type ScopeDialog = {
+  type: "delete" | "save";
+  expenseId: number;
+  recurringTemplateId: number;
+};
+
 function toDateInput(dateStr: string): string {
   return new Date(dateStr).toISOString().split("T")[0];
 }
@@ -19,26 +25,21 @@ export default function ExpenseList({ expenses, onRefresh, showDelete = true }: 
   const [editAmount, setEditAmount] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editDate, setEditDate] = useState("");
-  const [editRecurring, setEditRecurring] = useState(false);
-  const [editRecurringInterval, setEditRecurringInterval] = useState<"weekly" | "monthly">("monthly");
   const [saving, setSaving] = useState(false);
+  const [scopeDialog, setScopeDialog] = useState<ScopeDialog | null>(null);
 
   const startEdit = (expense: ExpenseItem) => {
     setEditingId(expense.id);
     setEditAmount(String(expense.amount));
     setEditDescription(expense.description);
     setEditDate(toDateInput(expense.date));
-    setEditRecurring(expense.recurring);
-    setEditRecurringInterval((expense.recurringInterval as "weekly" | "monthly") ?? "monthly");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
-    setEditRecurring(false);
-    setEditRecurringInterval("monthly");
   };
 
-  const saveEdit = async (id: number) => {
+  const doSave = async (id: number, scope: "single" | "future") => {
     setSaving(true);
     try {
       await fetch(`/api/expenses/${id}`, {
@@ -48,11 +49,11 @@ export default function ExpenseList({ expenses, onRefresh, showDelete = true }: 
           amount: parseFloat(editAmount),
           description: editDescription,
           date: new Date(editDate).toISOString(),
-          recurring: editRecurring,
-          recurringInterval: editRecurring ? editRecurringInterval : null,
+          scope,
         }),
       });
       setEditingId(null);
+      setScopeDialog(null);
       onRefresh();
     } catch (error) {
       console.error("Failed to update expense:", error);
@@ -61,12 +62,29 @@ export default function ExpenseList({ expenses, onRefresh, showDelete = true }: 
     }
   };
 
-  const handleDelete = async (id: number) => {
+  const saveEdit = (expense: ExpenseItem) => {
+    if (expense.recurringTemplateId) {
+      setScopeDialog({ type: "save", expenseId: expense.id, recurringTemplateId: expense.recurringTemplateId });
+    } else {
+      doSave(expense.id, "single");
+    }
+  };
+
+  const doDelete = async (id: number, scope: "single" | "future") => {
     try {
-      await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+      await fetch(`/api/expenses/${id}?scope=${scope}`, { method: "DELETE" });
+      setScopeDialog(null);
       onRefresh();
     } catch (error) {
       console.error("Failed to delete expense:", error);
+    }
+  };
+
+  const handleDelete = (expense: ExpenseItem) => {
+    if (expense.recurringTemplateId) {
+      setScopeDialog({ type: "delete", expenseId: expense.id, recurringTemplateId: expense.recurringTemplateId });
+    } else {
+      doDelete(expense.id, "single");
     }
   };
 
@@ -75,109 +93,136 @@ export default function ExpenseList({ expenses, onRefresh, showDelete = true }: 
   }
 
   return (
-    <div className="space-y-1">
-      {expenses.map((expense) =>
-        editingId === expense.id ? (
-          <div key={expense.id} className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 space-y-2">
-            <div className="flex gap-2">
-              <input
-                type="number"
-                min={0}
-                step={0.01}
-                value={editAmount}
-                onChange={(e) => setEditAmount(e.target.value)}
-                className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-right text-gray-900 focus:border-[#22C55E] focus:outline-none"
-                placeholder="Amount"
-              />
-              <input
-                type="text"
-                value={editDescription}
-                onChange={(e) => setEditDescription(e.target.value)}
-                className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-[#22C55E] focus:outline-none"
-                placeholder="Description"
-              />
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <input
-                type="date"
-                value={editDate}
-                onChange={(e) => setEditDate(e.target.value)}
-                className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-[#22C55E] focus:outline-none"
-              />
-              <label className="flex items-center gap-1.5 cursor-pointer">
+    <>
+      <div className="space-y-1">
+        {expenses.map((expense) =>
+          editingId === expense.id ? (
+            <div key={expense.id} className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 space-y-2">
+              <div className="flex gap-2">
                 <input
-                  type="checkbox"
-                  checked={editRecurring}
-                  onChange={(e) => setEditRecurring(e.target.checked)}
-                  className="rounded border-gray-300 text-[#22C55E] focus:ring-[#22C55E]"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  className="w-24 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-right text-gray-900 focus:border-[#22C55E] focus:outline-none"
+                  placeholder="Amount"
                 />
-                <span className="text-xs text-gray-600">Recurring</span>
-              </label>
-              {editRecurring && (
-                <select
-                  value={editRecurringInterval}
-                  onChange={(e) => setEditRecurringInterval(e.target.value as "weekly" | "monthly")}
-                  className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-xs text-gray-900 focus:border-[#22C55E] focus:outline-none"
+                <input
+                  type="text"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  className="flex-1 rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-[#22C55E] focus:outline-none"
+                  placeholder="Description"
+                />
+              </div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                  className="rounded-lg border border-gray-200 bg-white px-2 py-1 text-sm text-gray-900 focus:border-[#22C55E] focus:outline-none"
+                />
+                <button
+                  onClick={() => saveEdit(expense)}
+                  disabled={saving}
+                  className="text-xs bg-[#22C55E] text-white px-2.5 py-1 rounded-lg hover:bg-[#16A34A] disabled:opacity-50 transition-colors"
                 >
-                  <option value="weekly">Every week</option>
-                  <option value="monthly">Every month</option>
-                </select>
-              )}
+                  {saving ? "Saving…" : "Save"}
+                </button>
+                <button
+                  onClick={cancelEdit}
+                  className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div
+              key={expense.id}
+              className="flex items-center justify-between text-sm py-2 group cursor-pointer rounded-xl hover:bg-gray-50 px-2 transition-colors"
+              onClick={() => startEdit(expense)}
+            >
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <p className="text-gray-800 truncate">{expense.description}</p>
+                  {expense.recurringInterval && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 shrink-0">
+                      {expense.recurringInterval === "weekly" ? "weekly" : "monthly"}
+                    </span>
+                  )}
+                  {expense.tripName && (
+                    <span className="text-xs px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-600 shrink-0">
+                      {expense.tripName}
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-gray-400">
+                  {new Date(expense.date).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="flex items-center gap-2 ml-3">
+                <span className="font-semibold text-red-500">
+                  -{formatCurrency(expense.amount)}
+                </span>
+                {showDelete && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(expense); }}
+                    className="text-gray-300 hover:text-red-400 text-lg leading-none transition-colors opacity-0 group-hover:opacity-100"
+                  >
+                    &times;
+                  </button>
+                )}
+              </div>
+            </div>
+          )
+        )}
+      </div>
+
+      {/* Scope dialog for recurring expenses */}
+      {scopeDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full space-y-4">
+            <h3 className="text-base font-semibold text-gray-900">
+              {scopeDialog.type === "delete" ? "Delete recurring expense" : "Edit recurring expense"}
+            </h3>
+            <p className="text-sm text-gray-500">
+              {scopeDialog.type === "delete"
+                ? "Do you want to delete just this expense, or this and all future occurrences?"
+                : "Do you want to update just this expense, or this and all future occurrences?"}
+            </p>
+            <div className="flex flex-col gap-2">
               <button
-                onClick={() => saveEdit(expense.id)}
-                disabled={saving}
-                className="text-xs bg-[#22C55E] text-white px-2.5 py-1 rounded-lg hover:bg-[#16A34A] disabled:opacity-50 transition-colors"
+                onClick={() =>
+                  scopeDialog.type === "delete"
+                    ? doDelete(scopeDialog.expenseId, "single")
+                    : doSave(scopeDialog.expenseId, "single")
+                }
+                className="w-full text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2.5 rounded-xl transition-colors"
               >
-                {saving ? "Saving…" : "Save"}
+                Just this one
               </button>
               <button
-                onClick={cancelEdit}
-                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                onClick={() =>
+                  scopeDialog.type === "delete"
+                    ? doDelete(scopeDialog.expenseId, "future")
+                    : doSave(scopeDialog.expenseId, "future")
+                }
+                className="w-full text-sm bg-red-50 hover:bg-red-100 text-red-600 px-4 py-2.5 rounded-xl transition-colors"
+              >
+                This and all future
+              </button>
+              <button
+                onClick={() => setScopeDialog(null)}
+                className="w-full text-sm text-gray-400 hover:text-gray-600 px-4 py-2 rounded-xl transition-colors"
               >
                 Cancel
               </button>
             </div>
           </div>
-        ) : (
-          <div
-            key={expense.id}
-            className="flex items-center justify-between text-sm py-2 group cursor-pointer rounded-xl hover:bg-gray-50 px-2 transition-colors"
-            onClick={() => startEdit(expense)}
-          >
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <p className="text-gray-800 truncate">{expense.description}</p>
-                {expense.recurring && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-600 shrink-0">
-                    {expense.recurringInterval === "weekly" ? "weekly" : "monthly"}
-                  </span>
-                )}
-                {expense.tripName && (
-                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-teal-50 text-teal-600 shrink-0">
-                    {expense.tripName}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-400">
-                {new Date(expense.date).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="flex items-center gap-2 ml-3">
-              <span className="font-semibold text-red-500">
-                -{formatCurrency(expense.amount)}
-              </span>
-              {showDelete && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); handleDelete(expense.id); }}
-                  className="text-gray-300 hover:text-red-400 text-lg leading-none transition-colors opacity-0 group-hover:opacity-100"
-                >
-                  &times;
-                </button>
-              )}
-            </div>
-          </div>
-        )
+        </div>
       )}
-    </div>
+    </>
   );
 }
