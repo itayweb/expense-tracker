@@ -15,6 +15,9 @@ export async function GET(request: NextRequest) {
   const weekNumber = params.get("weekNumber") ? parseInt(params.get("weekNumber")!) : null;
   const categoryId = params.get("categoryId") ? parseInt(params.get("categoryId")!) : null;
 
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
   const budget = await prisma.budget.findUnique({
     where: { userId_month_year: { userId, month, year } },
     include: {
@@ -22,7 +25,10 @@ export async function GET(request: NextRequest) {
         include: {
           category: {
             include: {
-              expenses: { orderBy: { date: "desc" } },
+              expenses: {
+                where: { date: { gte: monthStart, lte: monthEnd } },
+                orderBy: { date: "desc" },
+              },
             },
           },
         },

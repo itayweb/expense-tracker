@@ -5,6 +5,9 @@ import { generateRecurringExpenses } from "@/lib/recurringUtils";
 import { getAuthedUserId } from "@/lib/auth/server";
 
 async function fetchBudget(userId: string, month: number, year: number) {
+  const monthStart = new Date(year, month - 1, 1);
+  const monthEnd = new Date(year, month, 0, 23, 59, 59, 999);
+
   return prisma.budget.findUnique({
     where: { userId_month_year: { userId, month, year } },
     include: {
@@ -13,6 +16,7 @@ async function fetchBudget(userId: string, month: number, year: number) {
           category: {
             include: {
               expenses: {
+                where: { date: { gte: monthStart, lte: monthEnd } },
                 include: { trip: { select: { id: true, name: true } } },
                 orderBy: { date: "desc" },
               },
