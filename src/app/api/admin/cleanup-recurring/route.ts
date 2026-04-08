@@ -23,14 +23,14 @@ export async function POST() {
     return NextResponse.json({ deleted: 0, message: "No templates found" });
   }
 
-  // Delete unlinked expenses that match any template by (categoryId, description, amount)
+  // Delete unlinked expenses that match any template by (categoryId, description, amount).
+  // No recurringInterval filter — old generated instances may have recurringInterval set
+  // without a recurringTemplateId (pre-migration data).
   let deleted = 0;
   for (const template of templates) {
     const result = await prisma.expense.deleteMany({
       where: {
         recurringTemplateId: null,
-        recurringInterval: null,
-        recurring: false,
         categoryId: template.categoryId,
         description: { equals: template.description, mode: "insensitive" },
         amount: template.amount,

@@ -6,8 +6,6 @@
 
 DELETE FROM "Expense"
 WHERE "recurringTemplateId" IS NULL
-  AND "recurringInterval" IS NULL
-  AND "recurring" = false
   AND EXISTS (
     SELECT 1
     FROM "RecurringTemplate" rt
