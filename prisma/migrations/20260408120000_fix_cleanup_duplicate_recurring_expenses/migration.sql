@@ -1,11 +1,10 @@
--- Delete unlinked expense instances that correspond to a RecurringTemplate.
--- These are pre-migration generated copies that will be properly re-created
--- (with recurringTemplateId set) on the next generateRecurringExpenses run.
--- Matching directly against RecurringTemplate means this works even before
--- any linked instances exist (e.g. on a fresh build before the first page load).
+-- Delete unlinked expense instances for the current month that are covered
+-- by a RecurringTemplate. Previous months are preserved as historical records.
+-- The new system will re-generate this month's instances with recurringTemplateId set.
 
 DELETE FROM "Expense"
 WHERE "recurringTemplateId" IS NULL
+  AND date_trunc('month', "date") = date_trunc('month', NOW())
   AND EXISTS (
     SELECT 1
     FROM "RecurringTemplate" rt
