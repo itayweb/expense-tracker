@@ -43,7 +43,7 @@ export default function TripSection({ onRefresh }: TripSectionProps) {
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4">
         <div className="flex items-center justify-between py-3 border-b border-gray-50">
           <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wider">Trips</h2>
-          <Button size="sm" onClick={() => setShowCreateModal(true)}>
+          <Button size="sm" onClick={() => setShowCreateModal(true)} data-testid="new-trip-btn">
             + New Trip
           </Button>
         </div>

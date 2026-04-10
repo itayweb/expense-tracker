@@ -7,7 +7,11 @@
     "postinstall": "prisma generate",
     "dev": "next dev",
     "build": "prisma generate && prisma migrate deploy && next build",
-    "start": "next start"
+    "start": "next start",
+    "prepare": "husky",
+    "test:e2e": "playwright test --config=playwright.config.ts",
+    "test:e2e:ui": "playwright test --config=playwright.config.ts --ui",
+    "test:e2e:ci": "playwright test --config=playwright.ci.config.ts"
   },
   "keywords": [],
   "author": "",
@@ -28,5 +32,11 @@
     "react-dom": "^19.2.4",
     "tailwindcss": "^4.2.2",
     "typescript": "^6.0.2"
+  },
+  "devDependencies": {
+    "@clerk/testing": "^2.0.12",
+    "@playwright/test": "^1.59.1",
+    "dotenv-cli": "^11.0.0",
+    "husky": "^9.1.7"
   }
 }

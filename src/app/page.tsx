@@ -113,6 +113,7 @@ export default function DashboardPage() {
       {/* Floating + button (Trakki style) */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-20">
         <button
+          data-testid="add-expense-fab"
           onClick={() => setShowAddExpenseModal(true)}
           className="w-14 h-14 bg-gray-900 hover:bg-gray-800 text-white rounded-full shadow-xl shadow-gray-400/30 flex items-center justify-center text-2xl font-light transition-all active:scale-95"
           title="Add Expense"
