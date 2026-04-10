@@ -1,26 +1,31 @@
-import { test as setup, expect } from "@playwright/test";
+import { test as setup } from "@playwright/test";
+import { clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
 
 const authFile = "tests/e2e/.auth/user.json";
 
 /**
- * Signs in using Clerk test mode:
- * - Email: any address with +clerk_test subaddress
- * - Verification code: 424242 (fixed, no real email sent)
+ * Uses @clerk/testing to bypass the sign-in UI entirely.
+ * This works regardless of which auth method (Google, email, etc.) the app uses.
+ *
+ * Requires:
+ *   CLERK_SECRET_KEY — to sign the testing token
+ *   E2E_CLERK_USER_ID — the Clerk user ID of your test user (user_xxx...)
+ *     Find it in: Clerk Dashboard → Users → click the test user → copy User ID
  */
 setup("authenticate", async ({ page }) => {
-  await page.goto("/auth/sign-in");
+  await clerkSetup();
 
-  // Fill test email
-  await page.fill('input[name="identifier"], input[type="email"]', process.env.E2E_CLERK_USER_EMAIL!);
-  await page.click('button[type="submit"]:has-text("Continue"), button:has-text("Continue")');
+  await setupClerkTestingToken({
+    page,
+    userId: process.env.E2E_CLERK_USER_ID!,
+  });
 
-  // Enter the fixed Clerk test verification code
-  const codeInput = page.locator('input[name="code"], input[aria-label*="digit"], input[aria-label*="code"]').first();
-  await expect(codeInput).toBeVisible({ timeout: 10_000 });
-  await codeInput.fill("424242");
+  await page.goto("/");
 
-  // Wait for redirect to dashboard
-  await page.waitForURL((url) => !url.pathname.startsWith("/auth"), { timeout: 15_000 });
+  // Wait until we land on the dashboard (not sign-in, not wizard)
+  await page.waitForURL((url) => !url.pathname.startsWith("/auth"), {
+    timeout: 30_000,
+  });
 
   await page.context().storageState({ path: authFile });
 });
