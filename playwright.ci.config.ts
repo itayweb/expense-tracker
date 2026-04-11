@@ -15,6 +15,10 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_BASE_URL,
     trace: "retain-on-failure",
     video: "retain-on-failure",
+    // Bypass Vercel deployment protection on preview URLs
+    extraHTTPHeaders: process.env.VERCEL_AUTOMATION_BYPASS_SECRET
+      ? { "x-vercel-protection-bypass": process.env.VERCEL_AUTOMATION_BYPASS_SECRET }
+      : {},
   },
   projects: [
     {
