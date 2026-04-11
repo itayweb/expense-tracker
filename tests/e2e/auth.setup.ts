@@ -1,31 +1,36 @@
-import { test as setup } from "@playwright/test";
-import { clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
+import { test as setup, expect } from "@playwright/test";
 
 const authFile = "tests/e2e/.auth/user.json";
 
 /**
- * Uses @clerk/testing to bypass the sign-in UI entirely.
- * This works regardless of which auth method (Google, email, etc.) the app uses.
+ * Signs in using Clerk test mode:
+ * - Email must use +clerk_test subaddress (e.g. you+clerk_test@gmail.com)
+ *   This bypasses Google OAuth and uses the email code flow instead.
+ * - Verification code is always 424242 (no real email sent)
  *
- * Requires:
- *   CLERK_SECRET_KEY — to sign the testing token
- *   E2E_CLERK_USER_ID — the Clerk user ID of your test user (user_xxx...)
- *     Find it in: Clerk Dashboard → Users → click the test user → copy User ID
+ * One-time setup: sign in manually with the +clerk_test email once to
+ * create the user in Clerk, then set E2E_CLERK_USER_EMAIL in .env.test.
  */
 setup("authenticate", async ({ page }) => {
-  await clerkSetup();
+  await page.goto("/auth/sign-in");
 
-  await setupClerkTestingToken({
-    page,
-    userId: process.env.E2E_CLERK_USER_ID!,
-  });
+  // Fill the +clerk_test email
+  await page.fill('input[name="identifier"], input[type="email"]', process.env.E2E_CLERK_USER_EMAIL!);
+  await page.click('button[type="submit"]:has-text("Continue"), button:has-text("Continue")');
 
-  await page.goto("/");
+  // Enter the fixed Clerk test verification code
+  const codeInput = page.locator('input[name="code"], input[aria-label*="digit"], input[aria-label*="code"]').first();
+  await expect(codeInput).toBeVisible({ timeout: 10_000 });
+  await codeInput.fill("424242");
 
-  // Wait until we land on the dashboard (not sign-in, not wizard)
-  await page.waitForURL((url) => !url.pathname.startsWith("/auth"), {
-    timeout: 30_000,
-  });
+  // Submit if there's a separate submit button (some Clerk UIs auto-submit)
+  const submitBtn = page.locator('button[type="submit"]:has-text("Continue"), button:has-text("Verify")');
+  if (await submitBtn.isVisible({ timeout: 1_000 }).catch(() => false)) {
+    await submitBtn.click();
+  }
+
+  // Wait for redirect to dashboard
+  await page.waitForURL((url) => !url.pathname.startsWith("/auth"), { timeout: 15_000 });
 
   await page.context().storageState({ path: authFile });
 });
