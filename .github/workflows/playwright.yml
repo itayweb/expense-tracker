@@ -24,13 +24,32 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium --with-deps
 
-      - name: Wait for Vercel preview deployment
+      - name: Wait for Vercel preview and get URL
         id: vercel-preview
-        uses: patrickedqvist/wait-for-vercel-preview@v1.3.2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          max_timeout: 300
-          check_interval: 10
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Polling Vercel for deployment of branch: $BRANCH"
+
+          for i in $(seq 1 60); do
+            DEPLOYMENT_URL=$(curl -sf "https://api.vercel.com/v6/deployments?limit=10&state=READY" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" | \
+              jq -r --arg branch "$BRANCH" \
+              '.deployments[] | select(.meta.githubCommitRef == $branch) | .url' | head -1)
+
+            if [ -n "$DEPLOYMENT_URL" ] && [ "$DEPLOYMENT_URL" != "null" ]; then
+              echo "url=https://$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+              echo "Found preview: https://$DEPLOYMENT_URL"
+              exit 0
+            fi
+
+            echo "Attempt $i/60 — not ready yet..."
+            sleep 10
+          done
+
+          echo "Timed out waiting for Vercel preview deployment"
+          exit 1
 
       - name: Run E2E tests against preview
         env:
