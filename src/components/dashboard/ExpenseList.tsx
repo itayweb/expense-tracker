@@ -21,6 +21,10 @@ function toDateInput(dateStr: string): string {
 }
 
 export default function ExpenseList({ expenses, onRefresh, showDelete = true }: ExpenseListProps) {
+  // Tracks recurring expenses deleted with scope=single. The template still exists
+  // and would regenerate the instance on the next full refetch, so we hide them
+  // optimistically instead of triggering a refetch that recreates them immediately.
+  const [hiddenIds, setHiddenIds] = useState<Set<number>>(new Set());
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editAmount, setEditAmount] = useState("");
   const [editDescription, setEditDescription] = useState("");
@@ -74,7 +78,13 @@ export default function ExpenseList({ expenses, onRefresh, showDelete = true }: 
     try {
       await fetch(`/api/expenses/${id}?scope=${scope}`, { method: "DELETE" });
       setScopeDialog(null);
-      onRefresh();
+      if (scope === "single") {
+        // Optimistically hide — don't refetch, because the template still exists
+        // and generateRecurringExpenses would immediately recreate the instance.
+        setHiddenIds((prev) => new Set(prev).add(id));
+      } else {
+        onRefresh();
+      }
     } catch (error) {
       console.error("Failed to delete expense:", error);
     }
@@ -88,14 +98,16 @@ export default function ExpenseList({ expenses, onRefresh, showDelete = true }: 
     }
   };
 
-  if (expenses.length === 0) {
+  const visibleExpenses = expenses.filter((e) => !hiddenIds.has(e.id));
+
+  if (visibleExpenses.length === 0) {
     return <p className="text-sm text-gray-400 text-center py-4" data-testid="no-expenses">No expenses yet</p>;
   }
 
   return (
     <>
       <div className="space-y-1" data-testid="expense-list">
-        {expenses.map((expense) =>
+        {visibleExpenses.map((expense) =>
           editingId === expense.id ? (
             <div key={expense.id} className="bg-green-50 border border-green-200 rounded-xl px-3 py-2.5 space-y-2" data-testid="expense-edit-row">
               <div className="flex gap-2">

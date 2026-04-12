@@ -13,10 +13,23 @@ export interface TestBudget {
 
 /**
  * Seed a minimal budget for the current month with one "monthly" test category.
- * POST /api/budget already deletes any existing budget for the same month,
- * so this is safe to call in beforeEach — each call starts clean.
+ * Cleans up all expenses and recurring templates from previous runs first.
  */
 export async function seedBudget(request: APIRequestContext): Promise<TestBudget> {
+  // Clean up expenses (and recurring templates) left over from previous runs.
+  // scope=future on a recurring expense also deletes the template, preventing re-generation.
+  // Run in parallel to avoid hitting the 30s test timeout.
+  const existingRes = await request.get(`/api/budget?month=${TEST_MONTH}&year=${TEST_YEAR}`);
+  if (existingRes.ok()) {
+    const existing = await existingRes.json();
+    const expenseIds: number[] = (existing?.categories ?? []).flatMap(
+      (cat: { expenses?: { id: number }[] }) => (cat.expenses ?? []).map((exp) => exp.id)
+    );
+    await Promise.all(
+      expenseIds.map((id) => request.delete(`/api/expenses/${id}?scope=future`))
+    );
+  }
+
   const budgetRes = await request.post("/api/budget", {
     data: {
       monthlyIncome: 10000,
@@ -27,13 +40,32 @@ export async function seedBudget(request: APIRequestContext): Promise<TestBudget
       ],
     },
   });
+  if (!budgetRes.ok()) {
+    throw new Error(`POST /api/budget failed ${budgetRes.status()}: ${await budgetRes.text()}`);
+  }
   const budget = await budgetRes.json();
 
   const fullRes = await request.get(`/api/budget?month=${TEST_MONTH}&year=${TEST_YEAR}`);
   const full = await fullRes.json();
+  if (!full?.categories) {
+    throw new Error(`GET /api/budget returned unexpected: ${JSON.stringify(full)}`);
+  }
   const category = full.categories.find((c: { isSystem: boolean }) => !c.isSystem);
 
   return { id: budget.id, month: TEST_MONTH, year: TEST_YEAR, categoryId: category.id };
+}
+
+/**
+ * Delete all trips for the test user. Call in beforeEach for trip tests
+ * so accumulated trips from previous runs don't bleed into assertions.
+ */
+export async function deleteAllTrips(request: APIRequestContext): Promise<void> {
+  const res = await request.get("/api/trips");
+  if (!res.ok()) return;
+  const trips = await res.json();
+  for (const trip of trips) {
+    await request.delete(`/api/trips/${trip.id}`);
+  }
 }
 
 /**

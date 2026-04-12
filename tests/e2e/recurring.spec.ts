@@ -2,9 +2,9 @@ import { test, expect } from "@playwright/test";
 import { seedBudget, addExpense } from "./helpers/api";
 
 test.describe("Recurring expenses", () => {
-  test("monthly recurring expense appears tagged in current month", async ({ page, request }) => {
-    const budget = await seedBudget(request);
-    await addExpense(request, {
+  test("monthly recurring expense appears tagged in current month", async ({ page }) => {
+    const budget = await seedBudget(page.request);
+    await addExpense(page.request, {
       amount: 200,
       description: "Streaming subscription",
       categoryId: budget.categoryId,
@@ -24,9 +24,9 @@ test.describe("Recurring expenses", () => {
     await expect(page.locator('[data-testid="expense-row"]:has-text("Streaming subscription")')).toHaveCount(1);
   });
 
-  test("editing a recurring expense — just this one does not affect template", async ({ page, request }) => {
-    const budget = await seedBudget(request);
-    await addExpense(request, {
+  test("editing a recurring expense — just this one does not affect template", async ({ page }) => {
+    const budget = await seedBudget(page.request);
+    await addExpense(page.request, {
       amount: 150,
       description: "Monthly gym",
       categoryId: budget.categoryId,
@@ -56,9 +56,9 @@ test.describe("Recurring expenses", () => {
     await expect(row.locator('[data-testid="recurring-badge"]')).toBeVisible();
   });
 
-  test("editing a recurring expense — this and all future updates template", async ({ page, request }) => {
-    const budget = await seedBudget(request);
-    await addExpense(request, {
+  test("editing a recurring expense — this and all future updates template", async ({ page }) => {
+    const budget = await seedBudget(page.request);
+    await addExpense(page.request, {
       amount: 300,
       description: "Insurance payment",
       categoryId: budget.categoryId,
@@ -80,9 +80,9 @@ test.describe("Recurring expenses", () => {
     await expect(page.locator('[data-testid="expense-row"]:has-text("Insurance payment")')).toBeVisible();
   });
 
-  test("deleting a recurring expense — just this one", async ({ page, request }) => {
-    const budget = await seedBudget(request);
-    await addExpense(request, {
+  test("deleting a recurring expense — just this one", async ({ page }) => {
+    const budget = await seedBudget(page.request);
+    await addExpense(page.request, {
       amount: 50,
       description: "Weekly snacks",
       categoryId: budget.categoryId,
@@ -105,9 +105,9 @@ test.describe("Recurring expenses", () => {
     await expect(page.locator('[data-testid="expense-row"]:has-text("Weekly snacks")')).not.toBeVisible();
   });
 
-  test("deleting a recurring expense — this and all future", async ({ page, request }) => {
-    const budget = await seedBudget(request);
-    await addExpense(request, {
+  test("deleting a recurring expense — this and all future", async ({ page }) => {
+    const budget = await seedBudget(page.request);
+    await addExpense(page.request, {
       amount: 75,
       description: "Cloud storage",
       categoryId: budget.categoryId,

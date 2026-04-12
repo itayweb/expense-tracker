@@ -1,16 +1,18 @@
 import { test, expect } from "@playwright/test";
-import { seedBudget } from "./helpers/api";
+import { seedBudget, deleteAllTrips } from "./helpers/api";
 
 test.describe("Trips", () => {
-  test.beforeEach(async ({ request }) => {
-    await seedBudget(request);
+  test.beforeEach(async ({ page }) => {
+    await deleteAllTrips(page.request);
+    await seedBudget(page.request);
   });
 
   test("create a trip via UI", async ({ page }) => {
     await page.goto("/");
 
     await page.locator('[data-testid="new-trip-btn"]').click();
-    await expect(page.locator('text=New Trip')).toBeVisible();
+    // Use heading role to avoid matching the "+ New Trip" button text
+    await expect(page.getByRole('heading', { name: 'New Trip' })).toBeVisible();
 
     await page.fill("#trip-name", "Paris 2026");
     await page.fill("#trip-start", "2026-06-01");
