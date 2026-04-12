@@ -1,26 +1,32 @@
 import { test as setup } from "@playwright/test";
-import { clerkSetup, setupClerkTestingToken } from "@clerk/testing/playwright";
 
 const authFile = "tests/e2e/.auth/user.json";
 
 /**
- * Bypasses the sign-in UI entirely using @clerk/testing.
- * Works regardless of OAuth provider (Google, GitHub, etc.).
+ * Signs in by creating a Clerk sign-in token via the Backend API, then navigating
+ * to the sign-in page with that token. This bypasses the sign-in UI entirely —
+ * no password screen, no new-device OTP, no OAuth popups.
  *
  * Requires in .env.test / CI secrets:
- *   CLERK_SECRET_KEY      — used to sign the testing token
- *   E2E_CLERK_USER_ID     — Clerk user ID to authenticate as (user_2abc...)
- *     Find it: Clerk Dashboard → Users → click your user → copy User ID
+ *   CLERK_SECRET_KEY     — Clerk secret key to call the Backend API
+ *   E2E_CLERK_USER_ID   — ID of the test user (user_xxx from Clerk Dashboard)
  */
 setup("authenticate", async ({ page }) => {
-  await clerkSetup();
-
-  await setupClerkTestingToken({
-    page,
-    userId: process.env.E2E_CLERK_USER_ID!,
+  const res = await fetch("https://api.clerk.com/v1/sign_in_tokens", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.CLERK_SECRET_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      user_id: process.env.E2E_CLERK_USER_ID,
+      expires_in_seconds: 60,
+    }),
   });
 
-  await page.goto("/");
+  const { token } = await res.json();
+
+  await page.goto(`/auth/sign-in?__clerk_ticket=${token}`);
 
   await page.waitForURL((url) => !url.pathname.startsWith("/auth"), {
     timeout: 30_000,
