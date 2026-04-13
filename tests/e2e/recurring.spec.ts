@@ -2,6 +2,12 @@ import { test, expect } from "@playwright/test";
 import { seedBudget, addExpense } from "./helpers/api";
 
 test.describe("Recurring expenses", () => {
+  test.beforeEach(async ({ page }) => {
+    // Navigate first so the Clerk middleware can complete its handshake and
+    // refresh the short-lived __session JWT before we make any API calls.
+    await page.goto("/", { waitUntil: "networkidle" });
+  });
+
   test("monthly recurring expense appears tagged in current month", async ({ page }) => {
     const budget = await seedBudget(page.request);
     await addExpense(page.request, {

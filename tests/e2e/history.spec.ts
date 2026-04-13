@@ -2,6 +2,10 @@ import { test, expect } from "@playwright/test";
 import { seedBudget, addExpense, TEST_MONTH, TEST_YEAR } from "./helpers/api";
 
 test.describe("History / transactions view", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
+  });
+
   test("current month expenses appear in history", async ({ page }) => {
     const budget = await seedBudget(page.request);
     await addExpense(page.request, { amount: 120, description: "History test expense", categoryId: budget.categoryId });

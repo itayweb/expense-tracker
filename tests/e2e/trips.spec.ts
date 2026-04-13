@@ -3,6 +3,7 @@ import { seedBudget, deleteAllTrips } from "./helpers/api";
 
 test.describe("Trips", () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
     await deleteAllTrips(page.request);
     await seedBudget(page.request);
   });
@@ -55,8 +56,11 @@ test.describe("Trips", () => {
     await page.locator('text=Weekend getaway').click();
     await page.locator('button:has-text("Mark Completed")').click();
 
-    // Trip moves to completed section
-    await expect(page.locator('text=Weekend getaway')).not.toBeVisible();
+    // Wait for the modal to close (heading disappears after PUT resolves)
+    await expect(page.getByRole('heading', { name: 'Weekend getaway' })).not.toBeVisible({ timeout: 15000 });
+    // Trip card should also be gone from the active list
+    await expect(page.locator('p:has-text("Weekend getaway")')).not.toBeVisible();
+    // Reveal completed trips and verify it moved there
     await page.locator('button:has-text("Show"), button:has-text("completed trip")').first().click();
     await expect(page.locator('text=Weekend getaway')).toBeVisible();
   });
@@ -69,8 +73,12 @@ test.describe("Trips", () => {
     await page.locator('[data-testid="create-trip-submit"]').click();
 
     await page.locator('text=Trip to delete').click();
+    // First click shows the confirm button; second click actually deletes
     await page.locator('button:has-text("Delete trip")').click();
+    await page.locator('button:has-text("Confirm delete")').click();
 
-    await expect(page.locator('text=Trip to delete')).not.toBeVisible();
+    // Wait for modal to close then verify trip is gone
+    await expect(page.getByRole('heading', { name: 'Trip to delete' })).not.toBeVisible({ timeout: 15000 });
+    await expect(page.locator('p:has-text("Trip to delete")')).not.toBeVisible();
   });
 });

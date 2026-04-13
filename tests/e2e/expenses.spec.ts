@@ -3,6 +3,7 @@ import { seedBudget, addExpense } from "./helpers/api";
 
 test.describe("One-time expenses", () => {
   test.beforeEach(async ({ page }) => {
+    await page.goto("/", { waitUntil: "networkidle" });
     await seedBudget(page.request);
   });
 

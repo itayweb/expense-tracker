@@ -42,8 +42,8 @@ test.describe("Budget setup wizard", () => {
     await expect(page.locator('text=8,000').or(page.locator('text=8000'))).toBeVisible();
     await page.click('button:has-text("Save Budget"), button:has-text("Confirm")');
 
-    // After save, redirect to dashboard
-    await expect(page).toHaveURL("/");
+    // After save, redirect to dashboard (DB write for many categories can take a few seconds)
+    await expect(page).toHaveURL("/", { timeout: 15000 });
     await expect(page.locator('[data-testid="add-expense-fab"]')).toBeVisible();
   });
 });
