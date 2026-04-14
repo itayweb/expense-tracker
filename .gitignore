@@ -6,3 +6,11 @@ node_modules/
 .env.*
 tsconfig.tsbuildinfo
 .claude/
+
+# Playwright
+tests/e2e/.auth/user.json
+playwright-report/
+test-results/
+
+# Test env
+.env.test

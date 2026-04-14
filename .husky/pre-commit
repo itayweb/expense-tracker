@@ -1,0 +1,2 @@
+#!/usr/bin/env sh
+# No pre-commit checks configured. E2E tests run on pre-push.

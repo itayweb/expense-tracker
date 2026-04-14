@@ -5,53 +5,87 @@ generator client {
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 model Budget {
-  id            Int        @id @default(autoincrement())
-  userId        String     @default("legacy_user")
-  monthlyIncome Float
-  month         Int
-  year          Int
-  categories    Category[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
+  id               Int              @id @default(autoincrement())
+  userId           String           @default("legacy_user")
+  monthlyIncome    Float
+  month            Int
+  year             Int
+  budgetCategories BudgetCategory[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@unique([userId, month, year])
 }
 
 model Category {
-  id           Int       @id @default(autoincrement())
-  name         String
-  emoji        String?
-  type         String    // "weekly" or "monthly"
-  budgetAmount Float
-  budgetId     Int
-  isSystem     Boolean   @default(false)
-  budget       Budget    @relation(fields: [budgetId], references: [id], onDelete: Cascade)
-  expenses     Expense[]
-  createdAt    DateTime  @default(now())
+  id                 Int                 @id @default(autoincrement())
+  userId             String              @default("legacy_user")
+  name               String
+  emoji              String?
+  type               String              // "weekly" or "monthly"
+  isSystem           Boolean             @default(false)
+  budgetCategories   BudgetCategory[]
+  expenses           Expense[]
+  recurringTemplates RecurringTemplate[]
+  createdAt          DateTime            @default(now())
 
+  @@index([userId])
+}
+
+model BudgetCategory {
+  id           Int      @id @default(autoincrement())
+  budgetId     Int
+  categoryId   Int
+  budgetAmount Float
+  budget       Budget   @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category     Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+
+  @@unique([budgetId, categoryId])
   @@index([budgetId])
+  @@index([categoryId])
+}
+
+model RecurringTemplate {
+  id                Int       @id @default(autoincrement())
+  userId            String    @default("legacy_user")
+  categoryId        Int
+  amount            Float
+  description       String
+  recurringInterval String    // "weekly" or "monthly"
+  startDate         DateTime
+  category          Category  @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  expenses          Expense[]
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([categoryId])
 }
 
 model Expense {
-  id                Int      @id @default(autoincrement())
-  amount            Float
-  description       String
-  date              DateTime @default(now())
-  categoryId        Int
-  category          Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  recurring         Boolean  @default(false)
-  recurringInterval String?  // "weekly" or "monthly"
-  tripId            Int?
-  trip              Trip?    @relation(fields: [tripId], references: [id], onDelete: SetNull)
-  createdAt         DateTime @default(now())
+  id                  Int                @id @default(autoincrement())
+  amount              Float
+  description         String
+  date                DateTime           @default(now())
+  categoryId          Int
+  category            Category           @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  recurring           Boolean            @default(false)
+  recurringInterval   String?            // "weekly" or "monthly" — set on generated instances for UI tag
+  recurringTemplateId Int?
+  recurringTemplate   RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
+  tripId              Int?
+  trip                Trip?              @relation(fields: [tripId], references: [id], onDelete: SetNull)
+  createdAt           DateTime           @default(now())
 
   @@index([categoryId])
   @@index([tripId])
   @@index([date])
+  @@index([recurringTemplateId])
 }
 
 model Trip {

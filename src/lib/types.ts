@@ -30,6 +30,7 @@ export interface ExpenseItem {
   date: string;
   recurring: boolean;
   recurringInterval: string | null;
+  recurringTemplateId: number | null;
   tripId?: number | null;
   tripName?: string | null;
 }
@@ -66,7 +67,6 @@ export interface CategoryWithExpenses {
   emoji?: string;
   type: string;
   budgetAmount: number;
-  budgetId: number;
   isSystem?: boolean;
   expenses: ExpenseItem[];
   totalSpent: number;

@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+set -e
+
+# Check .env.test exists before running tests
+if [ ! -f .env.test ]; then
+  echo "⚠️  .env.test not found — skipping E2E tests. Copy .env.test.example to .env.test to enable."
+  exit 0
+fi
+
+echo "🧪 Running E2E tests before push..."
+npx playwright test --config=playwright.config.ts
+echo "✅ All E2E tests passed."

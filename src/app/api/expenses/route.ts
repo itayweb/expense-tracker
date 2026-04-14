@@ -12,8 +12,8 @@ export async function GET(request: NextRequest) {
 
   const expenses = await prisma.expense.findMany({
     where: categoryId
-      ? { categoryId: parseInt(categoryId), category: { budget: { userId } } }
-      : { category: { budget: { userId } } },
+      ? { categoryId: parseInt(categoryId), category: { userId } }
+      : { category: { userId } },
     include: { trip: { select: { id: true, name: true } } },
     orderBy: { date: "desc" },
   });
@@ -33,27 +33,49 @@ export async function POST(request: NextRequest) {
 
   // When adding a trip expense, auto-assign to the Trips system category
   if (body.tripId) {
-    const now = new Date();
-    const month = now.getMonth() + 1;
-    const year = now.getFullYear();
-
-    const budget = await prisma.budget.findUnique({
-      where: { userId_month_year: { userId, month, year } },
-      include: { categories: { where: { isSystem: true } } },
+    const tripsCategory = await prisma.category.findFirst({
+      where: { userId, isSystem: true },
     });
-
-    const tripsCategory = budget?.categories[0];
     if (tripsCategory) {
       categoryId = tripsCategory.id;
     }
   }
 
   const category = await prisma.category.findFirst({
-    where: { id: categoryId, budget: { userId } },
+    where: { id: categoryId, userId },
     select: { id: true },
   });
   if (!category) {
     return NextResponse.json({ error: "Category not found" }, { status: 404 });
+  }
+
+  // If this is a recurring expense, create a RecurringTemplate and link the instance
+  if (body.recurring && body.recurringInterval) {
+    const template = await prisma.recurringTemplate.create({
+      data: {
+        userId,
+        categoryId,
+        amount: body.amount,
+        description: body.description,
+        recurringInterval: body.recurringInterval,
+        startDate: body.date ? new Date(body.date) : new Date(),
+      },
+    });
+
+    const expense = await prisma.expense.create({
+      data: {
+        amount: body.amount,
+        description: body.description,
+        date: body.date ? new Date(body.date) : new Date(),
+        categoryId,
+        recurring: false,
+        recurringInterval: body.recurringInterval,
+        recurringTemplateId: template.id,
+        tripId: body.tripId || null,
+      },
+    });
+
+    return NextResponse.json(expense, { status: 201 });
   }
 
   const expense = await prisma.expense.create({
@@ -62,8 +84,8 @@ export async function POST(request: NextRequest) {
       description: body.description,
       date: body.date ? new Date(body.date) : new Date(),
       categoryId,
-      recurring: body.recurring || false,
-      recurringInterval: body.recurring ? body.recurringInterval || null : null,
+      recurring: false,
+      recurringInterval: null,
       tripId: body.tripId || null,
     },
   });

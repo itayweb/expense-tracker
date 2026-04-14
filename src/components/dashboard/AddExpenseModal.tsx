@@ -90,13 +90,14 @@ export default function AddExpenseModal({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} title={modalTitle}>
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4" data-testid="add-expense-form">
         {!isTripExpense && !initialCategoryId && categories && categories.length > 0 && (
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
               Category
             </label>
             <select
+              data-testid="expense-category-select"
               value={selectedCategoryId}
               onChange={(e) => setSelectedCategoryId(e.target.value)}
               required
@@ -141,6 +142,7 @@ export default function AddExpenseModal({
           <div className="space-y-2">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
+                data-testid="recurring-checkbox"
                 type="checkbox"
                 checked={recurring}
                 onChange={(e) => setRecurring(e.target.checked)}
@@ -150,6 +152,7 @@ export default function AddExpenseModal({
             </label>
             {recurring && (
               <select
+                data-testid="recurring-interval-select"
                 value={recurringInterval}
                 onChange={(e) => setRecurringInterval(e.target.value as "weekly" | "monthly")}
                 className="w-full rounded-xl border border-gray-200 bg-gray-50 px-3 py-2 text-gray-900 text-sm focus:border-[#22C55E] focus:outline-none"
@@ -165,7 +168,7 @@ export default function AddExpenseModal({
           <Button variant="secondary" type="button" onClick={handleClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={!canSubmit}>
+          <Button type="submit" disabled={!canSubmit} data-testid="add-expense-submit">
             {saving ? "Saving..." : "Add Expense"}
           </Button>
         </div>

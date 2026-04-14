@@ -76,7 +76,7 @@ export default function CreateTripModal({
           <Button variant="secondary" type="button" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={saving || !name.trim()}>
+          <Button type="submit" disabled={saving || !name.trim()} data-testid="create-trip-submit">
             {saving ? "Creating..." : "Create Trip"}
           </Button>
         </div>
