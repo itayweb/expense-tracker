@@ -129,61 +129,68 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const userId = await getAuthedUserId();
-  if (!userId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  try {
+    const userId = await getAuthedUserId();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-  const body = await request.json();
-  const { monthlyIncome, month, year, categories } = body;
+    const body = await request.json();
+    const { monthlyIncome, month, year, categories } = body;
 
-  // Delete existing budget for this month if it exists
-  await prisma.budget.deleteMany({ where: { userId, month, year } });
+    // Delete existing budget for this month if it exists
+    await prisma.budget.deleteMany({ where: { userId, month, year } });
 
-  const budget = await prisma.budget.create({
-    data: { userId, monthlyIncome, month, year },
-  });
-
-  // Upsert user-level categories
-  const categoryRows: { id: number; budgetAmount: number }[] = [];
-  for (const cat of categories as { name: string; type: string; budgetAmount: number; emoji?: string }[]) {
-    let existing = await prisma.category.findFirst({
-      where: { userId, name: { equals: cat.name, mode: "insensitive" } },
+    const budget = await prisma.budget.create({
+      data: { userId, monthlyIncome, month, year },
     });
-    if (!existing) {
-      existing = await prisma.category.create({
-        data: { userId, name: cat.name, type: cat.type, emoji: cat.emoji ?? null },
+
+    // Upsert user-level categories
+    const categoryRows: { id: number; budgetAmount: number }[] = [];
+    for (const cat of categories as { name: string; type: string; budgetAmount: number; emoji?: string }[]) {
+      let existing = await prisma.category.findFirst({
+        where: { userId, name: { equals: cat.name, mode: "insensitive" } },
       });
-    } else {
-      existing = await prisma.category.update({
-        where: { id: existing.id },
-        data: { type: cat.type, emoji: cat.emoji ?? null },
+      if (!existing) {
+        existing = await prisma.category.create({
+          data: { userId, name: cat.name, type: cat.type, emoji: cat.emoji ?? null },
+        });
+      } else {
+        existing = await prisma.category.update({
+          where: { id: existing.id },
+          data: { type: cat.type, emoji: cat.emoji ?? null },
+        });
+      }
+      categoryRows.push({ id: existing.id, budgetAmount: cat.budgetAmount });
+    }
+
+    // Ensure Trips system category exists
+    let tripsCategory = await prisma.category.findFirst({ where: { userId, isSystem: true } });
+    if (!tripsCategory) {
+      tripsCategory = await prisma.category.create({
+        data: { userId, name: "Trips", type: "monthly", isSystem: true },
       });
     }
-    categoryRows.push({ id: existing.id, budgetAmount: cat.budgetAmount });
-  }
 
-  // Ensure Trips system category exists
-  let tripsCategory = await prisma.category.findFirst({ where: { userId, isSystem: true } });
-  if (!tripsCategory) {
-    tripsCategory = await prisma.category.create({
-      data: { userId, name: "Trips", type: "monthly", isSystem: true },
+    await prisma.budgetCategory.createMany({
+      data: [
+        ...categoryRows.map(({ id, budgetAmount }) => ({
+          budgetId: budget.id,
+          categoryId: id,
+          budgetAmount,
+        })),
+        { budgetId: budget.id, categoryId: tripsCategory.id, budgetAmount: 0 },
+      ],
+      skipDuplicates: true,
     });
+
+    return NextResponse.json(budget, { status: 201 });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+    console.error("Budget POST error:", message, stack);
+    return NextResponse.json({ error: "Failed to create budget", detail: message }, { status: 500 });
   }
-
-  await prisma.budgetCategory.createMany({
-    data: [
-      ...categoryRows.map(({ id, budgetAmount }) => ({
-        budgetId: budget.id,
-        categoryId: id,
-        budgetAmount,
-      })),
-      { budgetId: budget.id, categoryId: tripsCategory.id, budgetAmount: 0 },
-    ],
-    skipDuplicates: true,
-  });
-
-  return NextResponse.json(budget, { status: 201 });
 }
 
 export async function PUT(request: NextRequest) {

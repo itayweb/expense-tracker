@@ -25,9 +25,10 @@ export async function seedBudget(request: APIRequestContext): Promise<TestBudget
     const expenseIds: number[] = (existing?.categories ?? []).flatMap(
       (cat: { expenses?: { id: number }[] }) => (cat.expenses ?? []).map((exp) => exp.id)
     );
-    await Promise.all(
-      expenseIds.map((id) => request.delete(`/api/expenses/${id}?scope=future`))
-    );
+    // Sequential to avoid concurrent scope=future deletes racing on the same template
+    for (const id of expenseIds) {
+      await request.delete(`/api/expenses/${id}?scope=future`);
+    }
   }
 
   const budgetRes = await request.post("/api/budget", {
