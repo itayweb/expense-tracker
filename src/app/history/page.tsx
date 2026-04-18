@@ -326,7 +326,7 @@ export default function HistoryPage() {
                           </span>
                         </div>
                       </div>
-                      <ExpenseList expenses={cat.expenses} onRefresh={() => fetchHistory(true)} showDelete={false} />
+                      <ExpenseList expenses={cat.expenses} onRefresh={() => fetchHistory(true)} />
                     </div>
                   );
                 })}

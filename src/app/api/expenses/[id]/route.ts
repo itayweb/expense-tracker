@@ -105,23 +105,24 @@ export async function DELETE(
     const template = await prisma.recurringTemplate.findFirst({
       where: { id: templateId, userId },
     });
-    if (!template) {
-      return NextResponse.json({ error: "Template not found" }, { status: 404 });
+
+    if (template) {
+      // Delete all instances from this date onward
+      await prisma.expense.deleteMany({
+        where: {
+          recurringTemplateId: templateId,
+          date: { gte: existing.date },
+          category: { userId },
+        },
+      });
+
+      // Delete the template itself (stops future generation)
+      await prisma.recurringTemplate.deleteMany({ where: { id: templateId } });
+
+      return NextResponse.json({ success: true });
     }
 
-    // Delete all instances from this date onward
-    await prisma.expense.deleteMany({
-      where: {
-        recurringTemplateId: templateId,
-        date: { gte: existing.date },
-        category: { userId },
-      },
-    });
-
-    // Delete the template itself (stops future generation)
-    await prisma.recurringTemplate.delete({ where: { id: templateId } });
-
-    return NextResponse.json({ success: true });
+    // Template already gone (e.g. deleted by a concurrent request) — fall through to single delete
   }
 
   await prisma.expense.delete({ where: { id: parseInt(id) } });

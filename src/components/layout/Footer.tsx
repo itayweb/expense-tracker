@@ -4,7 +4,7 @@ export default function Footer() {
       <p className="text-xs text-slate-500">
         Made by{" "}
         <a
-          href="https://github.com/itayadler"
+          href="https://www.linkedin.com/in/itay-adler/"
           target="_blank"
           rel="noopener noreferrer"
           className="hover:text-slate-300 transition-colors"
